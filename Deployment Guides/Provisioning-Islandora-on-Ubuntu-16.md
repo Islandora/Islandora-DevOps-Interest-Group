@@ -22,15 +22,12 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
   * [From Apt-Get Package Manager](#from-apt-get)
   * [From Source](#from-source)
    * [ghostscript](#ghostscript)
-   * [yasm](#yasm)
-   * [x264](#x264)
-   * [aac](#aac)
    * [libvpx](#libvpx)
-   * [opus](#opus)
    * [ffmpeg](#ffmpeg)
   * [From Binaries](#from-binary)
    * [ffmpeg2theora](#ffmpeg2theora)
    * [java and tomcat](#java-tomcat)
+   * [Blazegraph](#blazegraph)
    * [Fits](#fits)
    * [adore-djatoka](#adore-djatoka-install)
    * [drush](#drush)
@@ -275,7 +272,18 @@ Note that you need to ensure that your update-alternatives point to the right ja
 
 `update-alternatives --config javac`
 
-Configure Tomcat (based on http://dev.digibess.it/doku.php?id=reloaded:be_base). 
+Configure Tomcat (based on http://dev.digibess.it/doku.php?id=reloaded:be_base).
+
+We create directories for the repository data outside of Fedora home, so that it is easier in future to expand storage, or to use a SAN.
+```
+mkdir /usr/local/fedora
+
+mkdir /srv/data
+
+mkdir /srv/tmp
+
+chown -R tomcat7:tomcat7 /usr/local/fedora/ /srv/data/ /srv/tmp/
+```
 
 Update Tomcat environment variables and JAVA OPTS
 ```
@@ -367,11 +375,7 @@ cd /usr/share/tomcat7-blzg/webapps/
 
 wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war
 
-chown -R blazegraph:blazegraph /usr/share/apache-tomcat-7.0.85
-
-chown -R blazegraph:blazegraph /var/bigdata/
-
-chown -R blazegraph:blazegraph /etc/bigdata/
+chown -R blazegraph:blazegraph /usr/share/apache-tomcat-7.0.85 /var/bigdata/ /etc/bigdata/
 
 chmod +x /etc/init.d/blazegraph
 
