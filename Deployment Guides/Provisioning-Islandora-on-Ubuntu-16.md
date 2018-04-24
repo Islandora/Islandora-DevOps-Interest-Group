@@ -32,7 +32,7 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
    * [adore-djatoka](#adore-djatoka-install)
    * [drush](#drush)
 * [Configuration](#configuration)
-  * [OpenOffice](#openoffice)
+  * [LibreOffice](#libreoffice)
   * [Monit](#monit)
   * [Apache and PHP](#apache-php)
   * [Setup MySQL Databases and Server](#setup-mysql)
@@ -278,14 +278,14 @@ We create directories for the repository data outside of Fedora home, so that it
 ```
 mkdir /usr/local/fedora
 
-mkdir /srv/data
+mkdir -p /srv/fedora/data
 
-mkdir /srv/tmp
+mkdir /srv/fedora/tmp
 
-chown -R tomcat7:tomcat7 /usr/local/fedora/ /srv/data/ /srv/tmp/
+chown -R tomcat7:tomcat7 /usr/local/fedora/ /srv/fedora/
 ```
 
-Update Tomcat environment variables and JAVA OPTS
+Update Tomcat environment variables and JAVA OPTS:
 ```
 sed -i s/^JAVA_OPTS/#JAVA_OPTS/ /etc/default/tomcat7
 echo -e 'JAVA_HOME=JAVA_HOME_T\nJAVA_OPTS="JAVA_OPTS_T"\nJAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"\nFEDORA_HOME=FEDORA_HOME_T' >> /etc/default/tomcat7
@@ -293,6 +293,8 @@ echo -e 'JAVA_HOME=JAVA_HOME_T\nJAVA_OPTS="JAVA_OPTS_T"\nJAVA_OPTS="${JAVA_OPTS}
 sed -i "s|JAVA_HOME_T|$JAVA_HOME|g" /etc/default/tomcat7
 sed -i "s|JAVA_OPTS_T|$JAVA_OPTS|g" /etc/default/tomcat7
 sed -i "s|FEDORA_HOME_T|$FEDORA_HOME|g" /etc/default/tomcat7
+
+echo -e 'PATH=$FEDORA_HOME/server/bin:$FEDORA_HOME/client/bin:$JAVA_HOME/bin:$PATH' >> /etc/default/tomcat7
 ```
  
 **Note:** make sure you check `/etc/default/tomcat7` to ensure everything has been generated properly. If it didn’t you may have closed your shell you may need to source `islandora-install.properties` again. 
@@ -312,7 +314,7 @@ systemctl status tomcat7
 systemctl start tomcat7
 ```
 
-If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first JAVA_OPTS line in '/etc/default/tomcat7' with something simple, like 'JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"', to verify that Tomcat runs. Then enable the real value again and stop the service: 'systemctl stop tomcat7'.
+If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first JAVA_OPTS line in '/etc/default/tomcat7' with something simple, like `JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"`, to verify that Tomcat runs. Then enable the real value again and stop the service: `systemctl stop tomcat7`.
 
 Optionally, add a Tomcat user for the admin interface. This should be disabled once testing is complete.
 
@@ -426,6 +428,8 @@ ldconfig
 
 #### Drush  <a id="drush"></a>
 
+Ubuntu 16.4 has Drush version 5.10, which is installed above. If that causes issues, do the following.
+
 Specify drush commit due to issues with newer drush versions and automated tests used by QA:
 ```
 cd /opt
@@ -437,36 +441,57 @@ ln -s /opt/drush/drush /usr/bin/drush
 
 ### Configuration <a id="configuration"></a>  
 
-#### OpenOffice <a id="openoffice"></a>
+#### LibreOffice <a id="libreoffice"></a>
+
+We use Systemd, which manages restarting on failure, so Monit is no longer needed.
 ```
-cd /etc/init.d && wget --no-check-certificate https://raw.github.com/discoverygarden/openoffice-init-script/master/openoffice && chmod a+x openoffice
+useradd -m -d /home/libreoffice libreoffice
 
-useradd -m -d /home/openoffice openoffice
+cat > /etc/systemd/system/libreoffice.service <<END_LO
+[Unit]
+Description=Headless Libreoffice API server
 
-service openoffice start
+[Service]
+Type=simple
+User=libreoffice
+UMask=0002
+ExecStart=/usr/bin/soffice --headless --nologo --accept="socket,host=127.0.0.1,port=8100;urp"
+ExecStop=/usr/bin/killall -9 soffice.bin
+Restart=on-failure
 
-$SCHEDULE_OPENOFFICE_SERVICE_COMMAND
+[Install]
+WantedBy=multi-user.target
+END_LO
+
+systemctl daemon-reload
+
+systemctl enable libreoffice.service
+
+systemctl start libreoffice.service
 ```
 
-#### Monit <a id="monit"></a>
-Keep openoffice running as a service with Monit as it has been known to crash.  
+Verify functionality with `unoconv --connection 'socket,host=127.0.0.1,port=8100;urp;StarOffice.ComponentContext' -f pdf <some doc in a location writeable by user libreoffice>`.
+
+The following steps are required so that the apache2 user can delete derivatives created by libreoffice in /tmp.
+
 ```
-echo -e "check process openoffice\n        matching \"/usr/lib/libreoffice/program/soffice.bin\"\n        start program = \"/etc/init.d/openoffice start\"\n        stop program = \"/etc/init.d/openoffice stop\"\n        if failed host 127.0.0.1 port 8100 then restart\n        if 5 restarts within 5 cycles then timeout" > $MONIT_CONF_DIR/openoffice.conf
+adduser www-data libreoffice
 
-sed -i 's|# set httpd| set httpd|g' $MONIT_CONFIG_FILE
+mkdir /tmp/fedora
 
-sed -i 's|#    use address|    use address|g' $MONIT_CONFIG_FILE
+chown www-data:libreoffice /tmp/fedora
 
-sed -i 's|#    allow localhost|    allow localhost|g' $MONIT_CONFIG_FILE
+chmod 770 /tmp/fedora
 
-sed -i 's|    allow admin:monit|#    allow admin:monit|g' $MONIT_CONFIG_FILE  
+cp /usr/lib/tmpfiles.d/tmp.conf /etc/tmpfiles.d/
 
-sed -i 's|    allow @monit |#    allow @monit |g' $MONIT_CONFIG_FILE
-
-sed -i 's|    allow @users readonly |#    allow @users readonly |g' $MONIT_CONFIG_FILE  
-
-service monit restart
+cat >> /etc/tmpfiles.d/tmp.conf <<END_T
+# Make sure the Islandora tmp dir exists after reboot. Adjust cleaning schedule to taste.
+d /tmp/fedora 0770 www-data libreoffice -
+END_T
 ```
+
+You will need to configure Drupal to account for this: set `Temporary directory` in `Configuration => Media => File system` to `/tmp/fedora`.
 
 #### Apache and PHP  <a id="apache-php"></a>
 
