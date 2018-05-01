@@ -189,7 +189,7 @@ make && make install
 
 ```
 
-ffmpeg  
+ffmpeg build location
 ```
 mkdir ~/ffmpeg-source
 cd ~/ffmpeg-source
@@ -247,7 +247,7 @@ Cleanup ffmpeg source code:
 
 ### Software Dependencies installed by Binaries <a id="from-binary"></a>
 
-#### ffmpeg2theora  <a id="ffmeg2theora"></a>
+#### ffmpeg2theora  <a id="ffmpeg2theora"></a>
 
 `cd ~ && wget http://v2v.cc/~j/ffmpeg2theora/ffmpeg2theora-0.29.linux64.bin && chmod a+x ffmpeg2theora-0.29.linux64.bin && install -m 755 ffmpeg2theora-0.29.linux64.bin /usr/bin/ffmpeg2theora && rm -rf ffmpeg2theora-0.29.linux64.bin`  
 
@@ -290,13 +290,21 @@ chown -R tomcat7:tomcat7 /usr/local/fedora/ /srv/fedora/
 Update Tomcat environment variables and JAVA OPTS:
 ```
 sed -i s/^JAVA_OPTS/#JAVA_OPTS/ /etc/default/tomcat7
-echo -e 'JAVA_HOME=JAVA_HOME_T\nJAVA_OPTS="JAVA_OPTS_T"\nJAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"\nFEDORA_HOME=FEDORA_HOME_T' >> /etc/default/tomcat7
+
+cat >> /etc/default/tomcat7 <<END_JT
+JAVA_HOME=JAVA_HOME_T
+JAVA_OPTS="JAVA_OPTS_T"
+JAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"
+FEDORA_HOME=FEDORA_HOME_T
+END_JT
 
 sed -i "s|JAVA_HOME_T|$JAVA_HOME|g" /etc/default/tomcat7
 sed -i "s|JAVA_OPTS_T|$JAVA_OPTS|g" /etc/default/tomcat7
 sed -i "s|FEDORA_HOME_T|$FEDORA_HOME|g" /etc/default/tomcat7
 
-echo -e 'PATH=$FEDORA_HOME/server/bin:$FEDORA_HOME/client/bin:$JAVA_HOME/bin:$PATH' >> /etc/default/tomcat7
+cat >> /etc/default/tomcat7 <<END_JT2
+PATH=$FEDORA_HOME/server/bin:$FEDORA_HOME/client/bin:$JAVA_HOME/bin:$PATH
+END_JT2
 ```
  
 **Note:** make sure you check `/etc/default/tomcat7` to ensure everything has been generated properly. If it didn’t you may have closed your shell you may need to source `islandora-install.properties` again. 
