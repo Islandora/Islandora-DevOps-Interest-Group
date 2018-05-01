@@ -33,7 +33,6 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
    * [drush](#drush)
 * [Configuration](#configuration)
   * [LibreOffice](#libreoffice)
-  * [Monit](#monit)
   * [Apache and PHP](#apache-php)
   * [Setup MySQL Databases and Server](#setup-mysql)
 * [Install Fedora Commons](#fedora)
