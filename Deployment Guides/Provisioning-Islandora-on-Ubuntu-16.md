@@ -1305,7 +1305,6 @@ Islandora Vagrant uses a Cantaloupe provided script, called `delegates-3.4.rb` t
 Set up the `cantaloupe` service:
 ```
 cat > /etc/systemd/system/cantaloupe.service <<END_CL
-
 [Unit]
 Description=Cantaloupe Image Server
 
@@ -1327,7 +1326,6 @@ systemctl enable cantaloupe.service
 systemctl start cantaloupe.service
 
 cat > /root/bin/cantaloupe-purge.sh <<END_CLP
-
 #!/bin/bash
 cd /opt/cantaloupe
 sudo -u cantaloupe java -Dcantaloupe.config=/opt/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
