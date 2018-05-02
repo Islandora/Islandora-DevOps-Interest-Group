@@ -1266,6 +1266,20 @@ sed -i "s|log.access.RollingFileAppender.pathname = /path/to/logs/access.log|log
 
 sed -i "s|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /path/to/logs/access-%d{yyyy-MM-dd}.log|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /srv/cantaloupe/log/access-%d{yyyy-MM-dd}.log|" cantaloupe.properties
 
+sed -i "s|processor.jp2 = KakaduProcessor|processor.jp2 = OpenJpegProcessor|" cantaloupe.properties
+
+sed -i "s|StreamProcessor.retrieval_strategy = StreamStrategy|StreamProcessor.retrieval_strategy = CacheStrategy|" cantaloupe.properties
+
+sed -i "s|cache.server.source.enabled = false|cache.server.source.enabled = true|" cantaloupe.properties
+
+sed -i "s|cache.server.derivative =*|cache.server.derivative = FilesystemCache|" cantaloupe.properties
+
+sed -i "s|cache.server.worker.enabled = false|cache.server.worker.enabled = true|" cantaloupe.properties
+
+sed -i "s|resolver.static = FilesystemResolver|resolver.static = HttpResolver|" cantaloupe.properties
+
+sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = true|" cantaloupe.properties
+
 # - DigiBESS and Islandora Vagrant differ on these
 #sed -i "s|endpoint.iiif.content_disposition = none|endpoint.iiif.content_disposition = inline|" cantaloupe.properties
 
@@ -1284,23 +1298,9 @@ sed -i "s|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern
 #sed -i "s|HttpResolver.auth.basic.username =|HttpResolver.auth.basic.username = anonymous|" cantaloupe.properties
 
 #sed -i "s|HttpResolver.auth.basic.secret =|HttpResolver.auth.basic.username = secret|" cantaloupe.properties
-
-sed -i "s|processor.jp2 = KakaduProcessor|processor.jp2 = OpenJpegProcessor|" cantaloupe.properties
-
-sed -i "s|StreamProcessor.retrieval_strategy = StreamStrategy|StreamProcessor.retrieval_strategy = CacheStrategy|" cantaloupe.properties
-
-sed -i "s|cache.server.source.enabled = false|cache.server.source.enabled = true|" cantaloupe.properties
-
-sed -i "s|cache.server.derivative =*|cache.server.derivative = FilesystemCache|" cantaloupe.properties
-
-sed -i "s|cache.server.worker.enabled = false|cache.server.worker.enabled = true|" cantaloupe.properties
-
-sed -i "s|resolver.static = FilesystemResolver|resolver.static = HttpResolver|" cantaloupe.properties
-
-sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = true|" cantaloupe.properties
 ```
 
-Islandora Vagrant uses a Cantaloupe provide script, called `delegates-3.4.rb` that permits "obfuscation" of URLs.
+Islandora Vagrant uses a Cantaloupe provided script, called `delegates-3.4.rb` that permits "obfuscation" of URLs. We leave further configuration of this service as an exercise to the reader. See the DigiBESS site.
 
 Set up the `cantaloupe` service:
 ```
