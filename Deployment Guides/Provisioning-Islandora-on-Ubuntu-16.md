@@ -67,7 +67,7 @@ cat ~/islandora-install.properties
 
     #!/bin/bash
     DB_SERVER="localhost"
-    DB_ROOT_PASSWORD="password"            # Set MySQL root password -> keep it simple -> run mysql_secure_installation after install to secure mySQL
+    DB_ROOT_PASSWORD="password"            # Set MySQL root password, used during 'apt-get' installation -> run 'mysql_secure_installation' after install to secure mySQL
     DRUPAL_DB_NAME="drupal7"               # Drupal database name
     DRUPAL_DB_USER="drupal"                # Drupal username for settings.php file
     DRUPAL_DB_PASS="password"              # Drupal password for settings.php file
@@ -173,7 +173,7 @@ apt-get -y install oracle-java8-installer oracle-java8-set-default libjpeg-dev l
 
 #### ghostscript  <a id="ghostscript"></a>
 
-**Notes:** ubuntu 14.04 installs ghostscript 9.10 which is currently failing our test sets and prevents tiffs from being generated from pdfs. Recommend installing from source to get correct version. Ubuntu 16.04 installs ghostscript 9.18, which appears to work. So the following is optional.
+**Notes:** Ubuntu 14.04 installs ghostscript 9.10 which is currently failing our test sets and prevents tiffs from being generated from pdfs. Recommend installing from source to get correct version. Ubuntu 16.04 installs ghostscript 9.18, which appears to work. So the following is optional.
 ```
 wget http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.05.tar.gz
 
@@ -381,7 +381,7 @@ sed -i "s|port=\"8009|port=\"8010|g" server.xml
 
 sed -i "s|redirectPort=\"8443|redirectPort=\"8444|g" server.xml
 ```
-Configure and install Blazegraph and its service.
+Install and configure Blazegraph and its service.
 ```
 mkdir -p /var/bigdata/logs
 
@@ -409,13 +409,12 @@ update-rc.d -f blazegraph remove
 
 update-rc.d blazegraph defaults
 
-service blazegraph start
+systemctl start blazegraph
 ```
-
 Check that Blazegraph is present at port 8081.
 
 ```
-service blazegraph stop
+systemctl stop blazegraph
 ```
 
 
@@ -494,7 +493,9 @@ systemctl enable libreoffice.service
 systemctl start libreoffice.service
 ```
 
-Verify functionality with `unoconv --connection 'socket,host=127.0.0.1,port=8100;urp;StarOffice.ComponentContext' -f pdf <some doc in a location writeable by user libreoffice>`.
+Verify functionality with:
+
+`unoconv --connection 'socket,host=127.0.0.1,port=8100;urp;StarOffice.ComponentContext' -f pdf <some doc in a location writeable by user libreoffice>`
 
 The following steps are required so that the `apache2` user can delete derivatives created by `libreoffice` in `/tmp`.
 
@@ -521,7 +522,7 @@ You will need to configure Drupal to account for this: set `Temporary directory`
 
 Setup apache vhost:
 
-`vi /etc/apache2/sites-available/000-default.conf`
+Edit `/etc/apache2/sites-available/000-default.conf`:
 
 ```
 <VirtualHost *:80>
@@ -570,7 +571,7 @@ Setup apache vhost:
 
 Alternatively, for SSL encryption:
 
-`vi /etc/apache2/sites-available/000-default.conf`
+Edit `/etc/apache2/sites-available/000-default.conf`:
 
 ```
 <VirtualHost *:80>
@@ -585,7 +586,7 @@ Alternatively, for SSL encryption:
 </VirtualHost>
 ```
 
-And `vi /etc/apache2/sites-available/default-ssl.conf`
+And edit `/etc/apache2/sites-available/default-ssl.conf`:
 
 ```
 <IfModule mod_ssl.c>
@@ -660,7 +661,7 @@ And `vi /etc/apache2/sites-available/default-ssl.conf`
 ```
 Note: You will need to modify the port specifications in the `ProxyPass` clauses above depending on where you install Adore-Djatoka and Cantaloupe. See below.
 
-Note: `uploadprogress` no longer appears to work. The `pecl` installation failed to compile, and the installation below still throws errors in the logs. Enable the apache ssl module if you are using https. Update the memory, post and upload file size limits only if you are sure you have the available memory, or when preparing to go live with a production site.
+Note: the PHP module `uploadprogress` no longer appears to work. The `pecl` installation documented in "Provisioning Islandora on Ubuntu" failed to compile, and the installation below, from DigiBESS, still throws errors in the logs. Enable the apache ssl module if you are using https. Update the memory, post and upload file size limits only if you are sure you have the available memory, or when preparing to go live with a production site.
 ```
 a2enmod rewrite  
 
@@ -689,13 +690,15 @@ echo "apc.shm_size = 64M" >> $APC_CONFIG_FILE
 
 #### Setup MySQL Databases and Server <a id="setup-mysql"></a>
 
-Run mysql_secure_installation to ensure security:
+Run `mysql_secure_installation` (interactive script) to ensure security, and then set up the Drupal and Fedora databases:
  ``` 
+mysql_secure_installation
+
 MYSQL=`which mysql`  
 
 $MYSQL -uroot -p$DB_ROOT_PASSWORD -e "$SQL"  
 ```
-Add a general backup system using `rsnapshot`, which will also backup mysql data. Uncomment the 'retain delta 3' line in `/etc/rsnapshot.conf` if you want 3 months retention. Edit the `LOCALHOST` section as desired.
+Add a general backup system using `rsnapshot`, which will also backup MySQL data.
 ```
 cat > /root/.my.cnf <<END_MS
 [client]
@@ -729,7 +732,7 @@ Do the following if you want 3 months worth of monthly backups kept.
 
 `sed -i 's|#retain	delta	3|retain	delta	3|' /etc/rsnapshot.conf`
 
-Example `LOCALHOST` backup definition section (in `/etc/rsnapshot.sh`):
+Example `LOCALHOST` backup definition section (in `/etc/rsnapshot.sh`, edit as desired):
 ```
 backup	/home/		localhost/
 backup	/etc/		localhost/
@@ -754,9 +757,8 @@ Daily mysql dumps will be stored in `/srv/dbbackups` and then backed up accordin
 
 #### Fedora Commons Base Install  <a id="fedora-base"></a>
 
-_Create install properties file_  
+Create install properties file and install Fedora:
 ```
-
 cd ~ 
 
 cat > ~/install.properties <<END_IP
@@ -808,8 +810,6 @@ sed -i "s|fedora.admin.pass=ADPASS|fedora.admin.pass=$FEDORA_ADMIN_PASS|g" ~/ins
 
 sed -i "s|servlet.engine=ENGINE|servlet.engine=existingTomcat|g"  ~/install.properties
 
-cd ~  
-
 wget http://downloads.sourceforge.net/fedora-commons/fcrepo-installer-$FEDORA_VERSION.jar  
 
 java -jar fcrepo-installer-$FEDORA_VERSION.jar install.properties  
@@ -823,9 +823,9 @@ Copy over server.xml with the one provided with Fedora.
 
 ```
 cp $CATALINA_HOME/conf/server.xml $CATALINA_HOME/conf/server.bak
-cp /usr/local/fedora/install/server.xml $CATALINA_HOME/conf/server.xml
+cp $FEDORA_HOME/install/server.xml $CATALINA_HOME/conf/server.xml
 ```
-Note: remove `maxSpareThreads` property in `/usr/share/tomcat/conf/server.xml` as it no longer does anything. Also, DigiBESS says to enable the `AJP/1.3 Connector port`.
+Note: remove `maxSpareThreads` property in `$CATALINA_HOME/conf/server.xml` as it no longer does anything. Also, DigiBESS says to enable the `AJP/1.3 Connector port`.
 
 Tweak some Fedora settings:
 ```
@@ -840,38 +840,38 @@ chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
 ```
 If you are following the usual practice of installing everything under Fedora home, do this, which is needed to be compatible with `basic-solr-configs`.
 
-`ln -s $CATALINA_HOME /usr/local/fedora/tomcat`
+`ln -s $CATALINA_HOME $FEDORA_HOME/tomcat`
 
 If you are keeping data separated from Fedora home, e.g. in `/srv/fedora/`, then do the following.
 
-`cp /usr/local/fedora/server/config/spring/akubra-llstore.xml /usr/local/fedora/server/config/spring/akubra-llstore.xml.bak`
+`cp $FEDORA_HOME/server/config/spring/akubra-llstore.xml $FEDORA_HOME/server/config/spring/akubra-llstore.xml.bak`
 
 Edit that file and find the `<bean name="fsObjectStore"` and `<bean name="fsDatastreamStore"` clauses and replace the `<constructor-arg value="PATH"` values with appropriate ones for your installation, e.g. `/srv/fedora/data/objectStore` and `/srv/fedora/data/datastreamStore`.
 
 Also:
 
-`cp /usr/local/fedora/server/fedora-internal-use/config/akubra-llstore.xml /usr/local/fedora/server/fedora-internal-use/config/akubra-llstore.xml.bak`
+`cp $FEDORA_HOME/server/fedora-internal-use/config/akubra-llstore.xml $FEDORA_HOME/server/fedora-internal-use/config/akubra-llstore.xml.bak`
 
 Edit that file and find the same `bean` clauses and replace the temporary data store paths to, e.g., `/srv/fedora/tmp/objectStore` and `/srv/fedora/tmp/datastreamStore`.
 
 Start and stop tomcat so Fedora creates some directories:
 
-`service tomcat7 restart`
+`systemctl restart tomcat7`
 
-NOTE: at this point Fedora may not start for you unless your host has a 'real' hostname. So, for example, if you are building this on a virtual machine that is behind a NAT, then you may need to edit `/etc/hosts` and set `hostname` to your FQDN. This is because `mulgara`, the default triple store, will not start without being able to resolve a valid host name. The symptom to check for is errors in `/usr/local/fedora/server/logs/fedora.log` that say "This MulgaraConnector is read-only!". If you have this issue, once you have set your host name correctly, the following should correct the problem (rebuild the Resource Index):
+Note: at this point Fedora may not start for you unless your host has a 'real' hostname. So, for example, if you are building this on a virtual machine that is behind a NAT, then you may need to edit `/etc/hosts` and set `hostname` to your FQDN. This is because `mulgara`, the default triple store, will not start without being able to resolve a valid host name. The symptom to check for is errors in `/usr/local/fedora/server/logs/fedora.log` that say "This MulgaraConnector is read-only!". If you have this issue, once you have set your host name correctly, the following should correct the problem (rebuild the Resource Index):
 
 ```
-service tomcat7 stop
+systemctl stop tomcat7
 /usr/local/fedora/server/bin/fedora-rebuild.sh
 ```
 
 If you are keeping Fedora data outside Fedora home, while Tomcat is stopped (stop it if you haven't done so), do the following:
 ```
-mv /usr/local/fedora/data/activemq-data /srv/fedora/activemq-data
+mv $FEDORA_HOME/data/activemq-data /srv/fedora/activemq-data
 
-ln -s /srv/fedora/data/activemq-data /usr/local/fedora/data/
+ln -s /srv/fedora/data/activemq-data $FEDORA_HOME/data/
 
-service tomcat7 start
+systemctl start tomcat7
 ```
 
 #### XACML Settings <a id="xacml-settings"></a>
@@ -894,6 +894,10 @@ cd ~
 git clone https://github.com/Islandora/islandora-xacml-policies && cd islandora-xacml-policies 
 
 mkdir $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && cp *.xml $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && rm -rf ~/islandora-xacml-policies
+
+chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME
+
+systemctl restart tomcat7
 ```
 
 #### Replace Mulgara with Blazegraph <a id="mulgara-blazegraph"></a>
@@ -916,7 +920,7 @@ tar xf trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT-bin.tar.gz
 
 mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /opt/trippi-sail
 
-chown -R tomcat7:tomcat7 /opt/trippi-sail
+chown -R $FEDORA_USER:$FEDORA_USER /opt/trippi-sail
 ```
 Configure Fedora:
 
@@ -930,10 +934,10 @@ In that file, insert the following before the `<Parameter name="fedora.home"` li
        virtualClasspath="/opt/trippi-sail/*.jar"
        searchVirtualFirst="true"/>
 ```
-
-`cp ~/trippi-sail/trippi-sail-blazegraph-remote/src/main/resources/sample-bean-config-xml/remote-blazegraph.xml /usr/local/fedora/server/config/spring/`
-
-Edit `/usr/local/fedora/server/config/spring/remote-blazegraph.xml` (two edits, in quasi 'diff' format):
+```
+cp ~/trippi-sail/trippi-sail-blazegraph-remote/src/main/resources/sample-bean-config-xml/remote-blazegraph.xml $FEDORA_HOME/server/config/spring/
+```
+Edit `$FEDORA_HOME/server/config/spring/remote-blazegraph.xml` (two edits, in quasi 'diff' format):
 
 In the `<bean id="remoteRepoFactory"` clause insert two lines (careful about the port):
 ```
@@ -954,15 +958,15 @@ Also modify the `SesameSession` bean (change two lines):
         </bean>
 ```
 
-Edit `/usr/local/fedora/server/config/fedora.fcfg`:
+Edit `$FEDORA_HOME/server/config/fedora.fcfg`:
 
-`cp /usr/local/fedora/server/config/fedora.fcfg /usr/local/fedora/server/config/fedora.fcfg.bak`
+`cp $FEDORA_HOME/server/config/fedora.fcfg $FEDORA_HOME/server/config/fedora.fcfg.bak`
 
 Comment out the `<param name="datastore" value="localMulgaraTriplestore">` clause.
 
-Edit `/usr/local/fedora/server/bin/env-server.sh`:
+Edit `$FEDORA_HOME/server/bin/env-server.sh`:
 
-`cp /usr/local/fedora/server/bin/env-server.sh /usr/local/fedora/server/bin/env-server.sh.bak`
+`cp $FEDORA_HOME/server/bin/env-server.sh $FEDORA_HOME/server/bin/env-server.sh.bak`
 
 In the `execWithTheseArgs()` function:
 ```
@@ -970,17 +974,17 @@ In the `execWithTheseArgs()` function:
 +	-cp \"$webinf\"/classes:/opt/trippi-sail/*:\"$FEDORA_HOME\"/server/bin:\"$webinf\"/lib/* \
 ```
 
-`chown -R tomcat7:tomcat7 /usr/local/fedora`
+`chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME`
 
-`service blazegraph stop`
+`systemctl stop blazegraph`
 
 Edit `/etc/bigdata/log4j.properties`:
 
 Set the default log level to `ERROR` instead of `WARN` (3 lines near the top).
 
-`service blazegraph start`
+`systemctl start blazegraph`
 
-`service tomcat7 restart`
+`systemctl restart tomcat7`
 
 #### GSearch and Solr <a id="gsearch-solr"></a>
 
@@ -1000,7 +1004,7 @@ cd ~
 
 cp -v gsearch/FgsBuild/fromsource/fedoragsearch.war $CATALINA_HOME/webapps
 
-chown tomcat7:tomcat7 $CATALINA_HOME/webapps/fedoragsearch.war
+chown $FEDORA_USER:$FEDORA_USER $CATALINA_HOME/webapps/fedoragsearch.war
 
 wget $SOLR_URL
 
@@ -1024,7 +1028,7 @@ cp -R $SOLR_NAME/contrib /opt/solr/
 
 cp -R $SOLR_NAME/dist /opt/solr/
 
-service jetty9 stop
+systemctl stop jetty9
 
 ln -s /usr/share/jetty9/start.ini /opt/solr/start.ini
 
@@ -1145,7 +1149,7 @@ rm -rf ~/$SOLR_NAME*
 ```
 If you are running Solr not under the Fedora tree, we will have to edit some values in the following file:
 ```
-sed -i "s|<lib dir=\"../../..|<lib dir=\"/opt/solr|" $SOLR_HOME/solr/$SOLR_DEFAULT_CORE_PATH/conf/solrconfig.xml
+sed -i "s|<lib dir=\"../../..|<lib dir=\"$SOLR_HOME|" $SOLR_HOME/solr/$SOLR_DEFAULT_CORE_PATH/conf/solrconfig.xml
 
 sed -i "s|{solr.data.dir:}|{solr.data.dir:/srv/solr/data}|" $SOLR_HOME/solr/$SOLR_DEFAULT_CORE_PATH/conf/solrconfig.xml
 
@@ -1155,11 +1159,11 @@ Similarly, because of the location of the OS based Tomcat and the separation of 
 ```
 cd $CATALINA_HOME/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/
 
-sed -i "s|/usr/local/fedora/tomcat|/var/lib/tomcat7|" foxmlToSolr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" foxmlToSolr.xslt`
 
-sed -i "s|/usr/local/fedora/tomcat|/var/lib/tomcat7|" islandora_transforms/slurp_all_MODS_to_solr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/slurp_all_MODS_to_solr.xslt`
 
-sed -i "s|/usr/local/fedora/tomcat|/var/lib/tomcat7|" islandora_transforms/WORKFLOW_to_solr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/WORKFLOW_to_solr.xslt`
 
 # Do the two following if your Solr is not under the Fedora tree
 #sed -i "s|:8080/|:8983/|" index.properties
@@ -1173,7 +1177,7 @@ cd $CATALINA_HOME/webapps/fedoragsearch/WEB-INF/lib
 
 wget https://github.com/discoverygarden/dgi_gsearch_extensions/releases/download/v0.1.1/gsearch_extensions-0.1.1-jar-with-dependencies.jar -O gsearch_extensions-0.1.1-jar-with-dependencies.jar
 ```
-Or (gets you release version 0.1.3):
+Or (gets you the latest release version, currently 0.1.3):
 ```
 cd ~
 
@@ -1183,7 +1187,7 @@ cd dgi_gsearch_extensions/
 
 mvn package
 
-cp target/gsearch_extensions-<version>-jar-with-dependencies.jar /var/lib/tomcat7/webapps/fedoragsearch/WEB-INF/lib/
+cp target/gsearch_extensions-0.1.3-jar-with-dependencies.jar $CATALINA_HOME/webapps/fedoragsearch/WEB-INF/lib/
 ```
 
 #### Adore-Djatoka <a id="adore-djatoka"></a>
@@ -1229,10 +1233,10 @@ chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
 
 chown -R blazegraph:blazegraph /var/lib/tomcat7-blzg/
 
-service blazegraph restart
+systemctl restart blazegraph
 ```
 
-#### Drupal Filter <a id=drupal-filter"></a>
+#### Drupal Filter <a id="drupal-filter"></a>
 
 Setup Drupal filter:  
 ```
@@ -1298,20 +1302,20 @@ cd $FEDORA_HOME/server/config
 
 wget https://raw.github.com/Islandora/islandora_drupal_filter/master/filter-drupal.xml 
 
-sed -i "s|DB_SERVER|$DB_SERVER|g" $FEDORA_HOME/server/config/filter-drupal.xml
+sed -i "s|DB_SERVER|$DB_SERVER|g" filter-drupal.xml
 
-sed -i "s|DRUPAL_DB_NAME|$DRUPAL_DB_NAME|g" $FEDORA_HOME/server/config/filter-drupal.xml
+sed -i "s|DRUPAL_DB_NAME|$DRUPAL_DB_NAME|g" filter-drupal.xml
 
-sed -i "s|DRUPAL_DB_USER|$DRUPAL_DB_USER|g" $FEDORA_HOME/server/config/filter-drupal.xml 
+sed -i "s|DRUPAL_DB_USER|$DRUPAL_DB_USER|g" filter-drupal.xml 
 
-sed -i "s|DRUPAL_DB_PASS|$DRUPAL_DB_PASS|g" $FEDORA_HOME/server/config/filter-drupal.xml
+sed -i "s|DRUPAL_DB_PASS|$DRUPAL_DB_PASS|g" filter-drupal.xml
 ```
 
-Start fedora fully configured: 
+Start Fedora fully configured:
 
 `chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME`  
 
-`service tomcat7 restart`
+`systemctl restart tomcat7`
 
 ### Install Drupal  <a id="install-drupal"></a>
 
@@ -1343,9 +1347,11 @@ cd sites/all/modules
 
 Git clone the following modules:  
 
-_modslist.sh helper script to handle the git repos to install modules_:  
-
+`modslist.sh` helper script to handle the git repos to install modules:  
 ```
+cd ~
+
+cat > modslist.sh <<END_IM
 #!/bin/bash
 cd /var/www/drupal7/sites/all/modules
 
@@ -1458,6 +1464,13 @@ git clone https://github.com/Islandora/islandora_checksum_checker.git
 git clone https://github.com/Islandora/islandora_premis.git
 
 git clone https://github.com/Islandora/islandora_bagit.git
+END_IM
+
+chmod +x modslist.sh
+
+./modslist.sh
+
+rm modslist.sh
 ```
 
 Dependency if `bagit` is to be used: 
@@ -1495,12 +1508,11 @@ chown -R $APACHE_USER:$APACHE_USER /var/www/drupal7
 
 drush -y site-install standard --account-name=$DRUPAL_ADMIN_USER --account-pass=$DRUPAL_ADMIN_PASS --db-url=mysql://$DRUPAL_DB_USER:$DRUPAL_DB_PASS@localhost/$DRUPAL_DB_NAME
 ```
-
-##### Secure settings.php 
+Secure `settings.php`:
  
 `chmod 440 /var/www/drupal7/sites/default/settings.php`
 
-##### Drush Enables and Configuration  
+Drush Enables and Configuration:
 ```
 drush -y en block color comment contextual dashboard dblog field field_sql_storage field_ui file filter help image list menu node number options overlay path rdf shortcut system taxonomy text toolbar user bartik seven imagemagick libraries views update ctools oauth_common oauth_common_providerui system_charts chart_views chart googleanalytics views_responsive_grid strongarm features designkit conditional_styles fe_block uuid node_export node_export_features widgets socialmedia block_class colorbox rules entity_token css_injector token coder date datepicker devel pathauto jquery_update variable xmlsitemap
 
@@ -1580,10 +1592,11 @@ drush -y updb
 
 drush -y cc all
 
-service $APACHE_SERVICE restart
+systemctl restart $APACHE_SERVICE
 
 drush cc all
 ```
+Don't forget to configure the Temporary directory, as discussed in the LibreOffice section.
 
 ### Follow-up Notes <a id="notes"></a>
 
