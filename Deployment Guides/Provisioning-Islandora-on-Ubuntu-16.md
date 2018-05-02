@@ -1741,6 +1741,6 @@ More tesseract languages can be found here: [https://code.google.com/p/tesseract
 
 Recommend locking down Drupal permissons on Production e.g. run something like https://github.com/discoverygarden/secure_drupal_file
 
-Keep server firewalled in production! Don't expose any ports to the Internet asides from 80/443. Port 8080 should be kept locked down to localhost only. 
+Keep server firewalled in production! Don't expose any ports to the Internet asides from 80/443. Port 8080 should be kept locked down to localhost only. Use `fail2ban` (installed above) to control `ssh` access at the least. Set up email on the server using `postfix` or your favourite email server and configure it to send system and Drupal admin emails to you.
 
 Visit https://github.com/discoverygarden/basic-solr-config/wiki/performance-tuning-for-multithreaded-solr-ingest if interested in multi fgsupdaters. Be warned this can drastically increase HEAP pressure if not careful. 
