@@ -43,6 +43,7 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
    * [Solr Configuration](#solr-configuration)
    * [GSearch Multithreading](#gsearch-multithreading)
   * [Adore-Djatoka](#adore-djatoka)
+  * [Cantaloupe](#cantaloupe)
   * [Setup Logging](#setup-logging)
   * [Drupal Filter](#drupal-filter)
 * [Install Drupal](#install-drupal)
@@ -669,6 +670,8 @@ a2enmod proxy
 
 a2enmod proxy_http  
 
+a2enmod headers
+
 a2enmod ssl
 
 add-apt-repository ppa:ondrej/php
@@ -1202,6 +1205,141 @@ Optionally, install this under the Blazegraph Tomcat (for separability):
 
 Note: If you install Adore-Djatoka with Blazegraph, you will need to change the `ProxyPass` lines in your Apache configuration to port `8081` instead of `8080`.
 
+#### Cantaloupe <a id="cantaloupe"></a>
+
+This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa.
+
+```
+cd ~
+
+wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Cantaloupe-3.4.2.zip
+
+unzip Cantaloupe-3.4.2.zip
+
+mv Cantaloupe-3.4.2 /opt/
+
+ln -s /opt/Cantaloupe-3.4.2 /opt/cantaloupe
+
+mkdir -p /srv/cantaloupe/cache
+
+mkdir /srv/cantaloupe/log
+
+mkdir /srv/cantaloupe/home
+
+useradd -d /srv/cantaloupe/home -s /bin/false cantaloupe
+
+chown -R cantaloupe:cantaloupe /srv/cantaloupe /opt/Cantaloupe-3.4.2
+
+cd /opt/cantaloupe
+
+cp cantaloupe.properties.sample cantaloupe.properties
+
+sed -i "s|temp_pathname = *|temp_pathname = /srv/tmp|" cantaloupe.properties
+
+sed -i "s|http.host = 0.0.0.0|http.host = 127.0.0.1|" cantaloupe.properties
+
+sed -i "s|FilesystemResolver.BasicLookupStrategy.path_prefix = /home/myself/images/|FilesystemResolver.BasicLookupStrategy.path_prefix = /tmp/|" cantaloupe.properties
+
+sed -i "s|log.application.level = debug|log.application.level = warn|" cantaloupe.properties
+
+sed -i "s|log.application.ConsoleAppender.enabled = true|log.application.ConsoleAppender.enabled = false|" cantaloupe.properties
+
+sed -i "s|log.application.FileAppender.pathname = /path/to/logs/application.log|log.application.FileAppender.pathname = /srv/cantaloupe/log/application.log|" cantaloupe.properties
+
+sed -i "s|log.application.RollingFileAppender.enabled = false|log.application.RollingFileAppender.enabled = true|" cantaloupe.properties
+
+sed -i "s|log.application.RollingFileAppender.pathname = /path/to/logs/application.log|log.application.RollingFileAppender.pathname = /srv/cantaloupe/log/application.log|" cantaloupe.properties
+
+sed -i "s|log.application.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /path/to/logs/application-%d{yyyy-MM-dd}.log|log.application.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /srv/cantaloupe/log/application-%d{yyyy-MM-dd}.log|" cantaloupe.properties
+
+sed -i "s|log.error.FileAppender.enabled = false|log.error.FileAppender.enabled = true|" cantaloupe.properties
+
+sed -i "s|log.error.FileAppender.pathname = /path/to/logs/error.log|log.error.FileAppender.pathname = /srv/cantaloupe/log/error.log|" cantaloupe.properties
+
+sed -i "s|log.error.RollingFileAppender.pathname = /path/to/logs/error.log|log.error.RollingFileAppender.pathname = /srv/cantaloupe/log/error.log|" cantaloupe.properties
+
+sed -i "s|log.error.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /path/to/logs/error-%d{yyyy-MM-dd}.log|log.error.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /srv/cantaloupe/log/error-%d{yyyy-MM-dd}.log|" cantaloupe.properties
+
+sed -i "s|log.access.FileAppender.pathname = /path/to/logs/access.log|log.access.FileAppender.pathname = /srv/cantaloupe/log/access.log|" cantaloupe.properties
+
+sed -i "s|log.access.RollingFileAppender.pathname = /path/to/logs/access.log|log.access.RollingFileAppender.pathname = /srv/cantaloupe/log/access.log|" cantaloupe.properties
+
+sed -i "s|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /path/to/logs/access-%d{yyyy-MM-dd}.log|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /srv/cantaloupe/log/access-%d{yyyy-MM-dd}.log|" cantaloupe.properties
+
+# - DigiBESS and Islandora Vagrant differ on these
+#sed -i "s|endpoint.iiif.content_disposition = none|endpoint.iiif.content_disposition = inline|" cantaloupe.properties
+
+#sed -i "s|processor.limit_to_8_bits = true|processor.limit_to_8_bits = false|" cantaloupe.properties
+
+#sed -i "s|cache.server.derivative.enabled = false|cache.server.derivative.enabled = true|" cantaloupe.properties
+
+#sed -i "s|cache.server.ttl_seconds = 2592000|cache.server.ttl_seconds = 259200|" cantaloupe.properties
+
+#sed -i "s|FilesystemCache.pathname = /var/cache/cantaloupe|FilesystemCache.pathname = /srv/cantaloupe/cache|" cantaloupe.properties
+
+#sed -i "s|HttpResolver.lookup_strategy = BasicLookupStrategy|HttpResolver.lookup_startegy = ScriptLookupStrategy|" cantaloupe.properties
+
+#sed -i "s|HttpResolver.BasicLookupStrategy.url_prefix = http://localhost/images/|HttpResolver.BasicLookupStrategy.url_prefix =|" cantaloupe.properties
+
+#sed -i "s|HttpResolver.auth.basic.username =|HttpResolver.auth.basic.username = anonymous|" cantaloupe.properties
+
+#sed -i "s|HttpResolver.auth.basic.secret =|HttpResolver.auth.basic.username = secret|" cantaloupe.properties
+
+sed -i "s|processor.jp2 = KakaduProcessor|processor.jp2 = OpenJpegProcessor|" cantaloupe.properties
+
+sed -i "s|StreamProcessor.retrieval_strategy = StreamStrategy|StreamProcessor.retrieval_strategy = CacheStrategy|" cantaloupe.properties
+
+sed -i "s|cache.server.source.enabled = false|cache.server.source.enabled = true|" cantaloupe.properties
+
+sed -i "s|cache.server.derivative =*|cache.server.derivative = FilesystemCache|" cantaloupe.properties
+
+sed -i "s|cache.server.worker.enabled = false|cache.server.worker.enabled = true|" cantaloupe.properties
+
+sed -i "s|resolver.static = FilesystemResolver|resolver.static = HttpResolver|" cantaloupe.properties
+
+sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = true|" cantaloupe.properties
+```
+
+Islandora Vagrant uses a Cantaloupe provide script, called `delegates-3.4.rb` that permits "obfuscation" of URLs.
+
+Set up the `cantaloupe` service:
+```
+cat > /etc/systemd/system/cantaloupe.service <<END_CL
+
+[Unit]
+Description=Cantaloupe Image Server
+
+[Service]
+Type=simple
+User=cantaloupe
+ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/opt/cantaloupe/cantaloupe.properties -Xmx256m -jar /opt/cantaloupe/Cantaloupe-3.4.2.war
+ExecStop=/usr/bin/killall -9 Cantaloupe-3.4.2.war
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+END_CL
+
+systemctl daemon-reload
+
+systemctl enable cantaloupe.service
+
+systemctl start cantaloupe.service
+
+cat > /root/bin/cantaloupe-purge.sh <<END_CLP
+
+#!/bin/bash
+cd /opt/cantaloupe
+sudo -u cantaloupe java -Dcantaloupe.config=/opt/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
+END_CLP
+```
+
+Root's crontab should contain something like this:
+```
+# Cantaloupe daily purge of cache
+00 23 * * * /root/bin/cantaloupe-purge.sh >>/root/cantaloupe-purge.log 2>&1
+```
+
 #### Setup Logging <a id="setup-logging"></a>
 Please note logging still needs some TLC: log4j and logrotate clash with some files: 
 ``` 
@@ -1325,6 +1463,7 @@ Start Fedora fully configured:
  
 ```
 cd $OS_DEFAULT_DOCUMENTROOT
+
 drush dl drupal  
 
 mv drupal-7* drupal7
