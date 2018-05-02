@@ -317,18 +317,18 @@ JAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"
 FEDORA_HOME=/usr/local/fedora
 ```
 
-Make sure the 'tomcat7' service is enabled and active:
+Make sure the `tomcat7` service is enabled and active:
 ```
 systemctl status tomcat7
 
 systemctl start tomcat7
 ```
 
-If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first JAVA_OPTS line in '/etc/default/tomcat7' with something simple, like `JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"`, to verify that Tomcat runs. Then enable the real value again and stop the service: `systemctl stop tomcat7`.
+If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first `JAVA_OPTS` line in `/etc/default/tomcat7` with something simple, like `JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"`, to verify that Tomcat runs. Then enable the real value again and stop the service: `systemctl stop tomcat7`.
 
 Optionally, add a Tomcat user for the admin interface. This should be disabled once testing is complete.
 
-Edit /etc/tomcat7/tomcat-users.xml:
+Edit `/etc/tomcat7/tomcat-users.xml`:
 ```
 
 <tomcat-users>
@@ -340,6 +340,8 @@ Edit /etc/tomcat7/tomcat-users.xml:
 #### Blazegraph  <a id="blazegraph"></a>
 
 This step is optional. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:be_blazeg. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail). This also makes migrating this service to a separate machine easier.
+
+Install and configure a second Tomcat.
 ```
 cd /usr/share
 
@@ -365,9 +367,21 @@ END_BG
 
 chown blazegraph:blazegraph /var/bigdata/.bash_profile
 ```
+Edit `/usr/share/tomcat7-blzg/conf/server.xml` to set the service ports to something other than the Tomcat defaults, so as not to conflict with the Fedora Tomcat.
+```
+cd /usr/share/tomcat7-blzg/conf
 
-Edit `/usr/share/tomcat7-blzg/conf/server.xml` to set the service ports to something other than the Tomcat defaults. Change `Server` and `Connector` ports and `redirectPort`, e.g. by incrementing by 1: 8006, 8081, 8444, 8010.
+cp server.xml server.xml.bak
 
+sed -i "s|port=\"8005|port=\"8006|g" server.xml
+
+sed -i "s|port=\"8080|port=\"8081|g" server.xml
+
+sed -i "s|port=\"8009|port=\"8010|g" server.xml
+
+sed -i "s|redirectPort=\"8443|redirectPort=\"8444|g" server.xml
+```
+Configure and install Blazegraph and its service.
 ```
 mkdir -p /var/bigdata/logs
 
