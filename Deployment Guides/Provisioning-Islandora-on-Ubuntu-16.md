@@ -156,7 +156,7 @@ chmod +x ~/islandora-install.properties
 
 3. Add optional multiverse repos in `/etc/apt/sources.list`. Uncomment each line in this file that ends in multiverse.
 
-4. Add optional rep to get PHP7.1 material: `add-apt-repository -y ppa:ondrej/php && apt-get update -y`
+4. Add optional repo to get PHP7.1 material: `add-apt-repository -y ppa:ondrej/php && apt-get update -y`
 
 ## Software Dependencies <a id="package-installation"></a>
 
@@ -171,12 +171,16 @@ Also note: 'imagemagick' in the default Ubuntu 16 repository does not supprt JPE
 apt-get -y install oracle-java8-installer oracle-java8-set-default libjpeg-dev libpng12-dev libtiff5-dev php7.1 php7.1-cli php7.1-curl php7.1-dev php7.1-gd php7.1-ldap php7.1-mysql php7.1-xsl php-apcu php-soap php-xml-htmlsax3 php-xml-parser php-xmlrpc php-xml-rpc2 php-xml-serializer php-imagick php7.1-mcrypt php-xml* mysql-server libmysql-java vim curl apache2 rsync wget imagemagick ant libimage-exiftool-perl unzip lame autoconf build-essential checkinstall git libass-dev libfaac-dev libgpac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev librtmp-dev libtheora-dev libtool libvorbis-dev pkg-config texi2html zlib1g-dev ffmpeg2theora poppler-utils python-pip libreoffice libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw bibutils ufraw links monit tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-spa tesseract-ocr-ita tesseract-ocr-por tesseract-ocr-hin tesseract-ocr-deu tesseract-ocr-jpn tesseract-ocr-rus tomcat7 tomcat7-admin yasm jetty9 libx264-dev libfdk-aac-dev libopus-dev openjpeg-tools libopenjp2-tools drush unoconv rsnapshot maven apg ssl-cert fail2ban mailutils
 ```
 
+You will be prompted three times for interactive installation, once from MySQL (provide a 'root' password), once from Postfix (choose 'no configuration') and once from Oracle Java (say yes to the license). Be sure to update your `islandora-install.properties` file with the MySQL password (DB_ROOT_PASSWORD).
+
 ### Software Dependencies Compiled from Source <a id="from-source"></a> 
 
 #### ghostscript  <a id="ghostscript"></a>
 
 **Notes:** Ubuntu 14.04 installs ghostscript 9.10 which is currently failing our test sets and prevents tiffs from being generated from pdfs. Recommend installing from source to get correct version. Ubuntu 16.04 installs ghostscript 9.18, which appears to work. So the following is optional.
 ```
+cd ~
+
 wget http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.05.tar.gz
 
 tar xvzf ghostscript-9.05.tar.gz
