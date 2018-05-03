@@ -150,13 +150,13 @@ chmod +x ~/islandora-install.properties
 ```
 
 ### Operating System <a id="operating-system"></a>
-1. Ensure latest core OS updates: `apt-get update && apt-get upgrade`
+1. Ensure latest core OS updates: `apt-get update && apt-get upgrade && apt-get --with-new-pkgs upgrade`. The latter will ensure you get the latest kernel patches. A reboot will probably be needed at this point.
 
 2. Add repo to easily obtain oracle java installer: `apt-get -y install python-software-properties && add-apt-repository -y ppa:webupd8team/java && apt-get -y update`
 
-3. Add optional multiverse repos in `/etc/apt/sources.list`.
+3. Add optional multiverse repos in `/etc/apt/sources.list`. Uncomment each line in this file that ends in multiverse.
 
-4. Uncomment each line in this file that ends in multiverse.
+4. Add optional rep to get PHP7.1 material: `add-apt-repository -y ppa:ondrej/php && apt-get update -y`
 
 ## Software Dependencies <a id="package-installation"></a>
 
@@ -168,7 +168,7 @@ Note: we use php7.1, while both 7.0 and 7.2 are available. 7.0 is too close to e
 Also note: 'imagemagick' in the default Ubuntu 16 repository does not supprt JPEG2000. Someone has made a patched repo (ppa:lyrasis/imagemagick-jp2) but it is now out of date. So if you need this functionality you may need to compile from source or force install an older version. The needed functionality is available from Openjpeg.
 
 ```
-apt-get -y install oracle-java8-installer oracle-java8-set-default libjpeg-dev libpng12-dev libtiff5-dev php7.1 php7.1-cli php7.1-curl php7.1-dev php7.1-gd php7.1-ldap php7.1-mysql php7.1-xsl php-apcu php-soap php-xml-htmlsax3 php-xml-parser php-xmlrpc php-xml-rpc2 php-xml-serializer php-imagick php7.1-mcrypt php-xml* mysql-server libmysql-java vim curl apache2 rsync wget imagemagick ant libimage-exiftool-perl unzip lame autoconf build-essential checkinstall git libass-dev libfaac-dev libgpac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev librtmp-dev libtheora-dev libtool libvorbis-dev pkg-config texi2html zlib1g-dev ffmpeg2theora poppler-utils python-pip libreoffice libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw bibutils ufraw links monit tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-spa tesseract-ocr-ita tesseract-ocr-por tesseract-ocr-hin tesseract-ocr-deu tesseract-ocr-jpn tesseract-ocr-rus tomcat7 tomcat7-admin yasm jetty9 libx264-dev libfdk-aac-dev libopus-dev openjpeg-tools libopenjp2-tools drush unoconv rsnapshot maven apg ssl-certs fail2ban mailutils
+apt-get -y install oracle-java8-installer oracle-java8-set-default libjpeg-dev libpng12-dev libtiff5-dev php7.1 php7.1-cli php7.1-curl php7.1-dev php7.1-gd php7.1-ldap php7.1-mysql php7.1-xsl php-apcu php-soap php-xml-htmlsax3 php-xml-parser php-xmlrpc php-xml-rpc2 php-xml-serializer php-imagick php7.1-mcrypt php-xml* mysql-server libmysql-java vim curl apache2 rsync wget imagemagick ant libimage-exiftool-perl unzip lame autoconf build-essential checkinstall git libass-dev libfaac-dev libgpac-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev librtmp-dev libtheora-dev libtool libvorbis-dev pkg-config texi2html zlib1g-dev ffmpeg2theora poppler-utils python-pip libreoffice libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw bibutils ufraw links monit tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-spa tesseract-ocr-ita tesseract-ocr-por tesseract-ocr-hin tesseract-ocr-deu tesseract-ocr-jpn tesseract-ocr-rus tomcat7 tomcat7-admin yasm jetty9 libx264-dev libfdk-aac-dev libopus-dev openjpeg-tools libopenjp2-tools drush unoconv rsnapshot maven apg ssl-cert fail2ban mailutils
 ```
 
 ### Software Dependencies Compiled from Source <a id="from-source"></a> 
