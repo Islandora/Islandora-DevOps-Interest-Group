@@ -346,11 +346,11 @@ Install and configure a second Tomcat.
 ```
 cd /usr/share
 
-wget http://apache.mirror.vexxhost.com/tomcat/tomcat-7/v7.0.85/bin/apache-tomcat-7.0.85.tar.gz
+wget http://apache.mirror.vexxhost.com/tomcat/tomcat-7/v7.0.86/bin/apache-tomcat-7.0.86.tar.gz
 
-tar xzf apache-tomcat-7.0.85.tar.gz && rm -f apache-tomcat-7.0.85.tar.gz
+tar xzf apache-tomcat-7.0.86.tar.gz && rm -f apache-tomcat-7.0.86.tar.gz
 
-ln -s /usr/share/apache-tomcat-7.0.85 /usr/share/tomcat7-blzg
+ln -s /usr/share/apache-tomcat-7.0.86 /usr/share/tomcat7-blzg
 
 useradd -m -d /var/bigdata -s /bin/false blazegraph
 
@@ -402,7 +402,7 @@ cd /usr/share/tomcat7-blzg/webapps/
 
 wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war
 
-chown -R blazegraph:blazegraph /usr/share/apache-tomcat-7.0.85 /var/bigdata/ /etc/bigdata/
+chown -R blazegraph:blazegraph /usr/share/apache-tomcat-7.0.86 /var/bigdata/ /etc/bigdata/
 
 chmod +x /etc/init.d/blazegraph
 
