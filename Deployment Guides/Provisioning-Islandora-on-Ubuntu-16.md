@@ -29,7 +29,8 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
    * [java and tomcat](#java-tomcat)
    * [Blazegraph](#blazegraph)
    * [Fits](#fits)
-   * [adore-djatoka](#adore-djatoka-install)
+   * [Adore-Djatoka Install](#adore-djatoka-install)
+   * [Cantaloupe Install](#cantaloupe-install)
    * [drush](#drush)
 * [Configuration](#configuration)
   * [LibreOffice](#libreoffice)
@@ -40,8 +41,8 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
   * [XACML Settings](#xacml-setings)
   * [Replace Mulgara with Blazegraph](#mulgara-blazegraph)
   * [GSearch and Solr](#gsearch-solr)
-   * [Solr Configuration](#solr-configuration)
-   * [GSearch Multithreading](#gsearch-multithreading)
+  * [Solr Configuration](#solr-configuration)
+  * [GSearch Multithreading](#gsearch-multithreading)
   * [Adore-Djatoka](#adore-djatoka)
   * [Cantaloupe](#cantaloupe)
   * [Setup Logging](#setup-logging)
@@ -428,7 +429,7 @@ wget http://projects.iq.harvard.edu/files/fits/files/fits-0.10.1.zip
 unzip -o fits-0.10.1.zip && rm -rf fits-0.10.1.zip && ln -s fits-0.10.1 fits && chmod a+x /usr/local/fits/fits.sh
 ```
 
-#### adore-djatoka <a id="adore-djatoka-install"></a>
+#### Adore-Djatoka Install<a id="adore-djatoka-install"></a>
 ``` 
 cd /usr/local
 
@@ -448,6 +449,28 @@ ln -s /usr/local/adore-djatoka/bin/Linux-x86-64/kdu_compress /usr/bin/kdu_compre
 echo "/usr/local/adore-djatoka/lib/Linux-x86-64" > /etc/ld.so.conf.d/kakadu.conf
 
 ldconfig
+```
+
+#### Cantaloupe Install<a id="cantaloupe-install"></a>
+
+This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa.
+
+```
+cd ~
+
+wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Cantaloupe-3.4.2.zip
+
+unzip Cantaloupe-3.4.2.zip
+
+mv Cantaloupe-3.4.2 /usr/local/
+
+ln -s /usr/local/Cantaloupe-3.4.2 /usr/local/cantaloupe
+
+mkdir -p /srv/cantaloupe/cache
+
+mkdir /srv/cantaloupe/log
+
+mkdir /srv/cantaloupe/home
 ```
 
 #### Drush  <a id="drush"></a>
@@ -1203,33 +1226,68 @@ Optionally, install this under the Blazegraph Tomcat (for separability):
 
 `cp /usr/local/adore-djatoka/dist/adore-djatoka.war /usr/share/tomcat7-blzg/webapps && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/adore-djatoka*`
 
-Note: If you install Adore-Djatoka with Blazegraph, you will need to change the `ProxyPass` lines in your Apache configuration to port `8081` instead of `8080`.
+Note: If you install Adore-Djatoka with Blazegraph, you will need to change the `ProxyPass` lines in your Apache configuration to port `8081` instead of `8080` and also modify the JAVA_OPTS in `/var/bigdata/.bash_profile`.
 
 #### Cantaloupe <a id="cantaloupe"></a>
 
-This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa.
+This is optional. Cantaloupe can be installed under an existing Tomcat or run as a standalone service. The latter is recommended by the Cantaloupe project, though the former is supported. The later makes separability of services easier if necessary. To install under the Fedora Tomcat:
 
+`cp /usr/local/Cantaloupe-3.4.2/Cantaloupe-3.4.2.war $CATALINA_HOME/webapps/cantaloupe.war && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/cantaloupe*`
+
+And add the following line to `/etc/default/tomcat7`:
+
+`JAVA_OPTS="${JAVA_OPTS} -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties`
+
+To install under the Blazegraph Tomcat:
+
+`cp /usr/local/Cantaloupe-3.4.2/Cantaloupe-3.4.2.war /usr/share/tomcat7-blzg/webapps/cantaloupe.war && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/cantaloupe*`
+
+Also edit `/var/bigdata/.bash_profile` to add the appropriate JAVA_OPTS option.
+
+To install Cantaloupe as a standalone service, do the following:
 ```
 cd ~
-
-wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Cantaloupe-3.4.2.zip
-
-unzip Cantaloupe-3.4.2.zip
-
-mv Cantaloupe-3.4.2 /usr/local/
-
-ln -s /usr/local/Cantaloupe-3.4.2 /usr/local/cantaloupe
-
-mkdir -p /srv/cantaloupe/cache
-
-mkdir /srv/cantaloupe/log
-
-mkdir /srv/cantaloupe/home
 
 useradd -d /srv/cantaloupe/home -s /bin/false cantaloupe
 
 chown -R cantaloupe:cantaloupe /srv/cantaloupe /usr/local/Cantaloupe-3.4.2
+```
+Set up the `cantaloupe` service:
+```
+cat > /etc/systemd/system/cantaloupe.service <<END_CL
+[Unit]
+Description=Cantaloupe Image Server
 
+[Service]
+Type=simple
+User=cantaloupe
+ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/Cantaloupe-3.4.2.war
+ExecStop=/usr/bin/killall -9 Cantaloupe-3.4.2.war
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+END_CL
+
+systemctl daemon-reload
+
+systemctl enable cantaloupe.service
+
+systemctl start cantaloupe.service
+
+cat > /root/bin/cantaloupe-purge.sh <<END_CLP
+#!/bin/bash
+cd /usr/local/cantaloupe
+sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
+END_CLP
+```
+Root's crontab should contain something like this:
+```
+# Cantaloupe daily purge of cache
+00 23 * * * /root/bin/cantaloupe-purge.sh >>/root/cantaloupe-purge.log 2>&1
+```
+Regardless of how you install Cantaloupe, do the following configuration:
+```
 cd /usr/local/cantaloupe
 
 cp cantaloupe.properties.sample cantaloupe.properties
@@ -1302,41 +1360,6 @@ sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = tr
 
 Islandora Vagrant uses a Cantaloupe provided script, called `delegates-3.4.rb` that permits "obfuscation" of URLs. We leave further configuration of this service as an exercise to the reader. See the DigiBESS site.
 
-Set up the `cantaloupe` service:
-```
-cat > /etc/systemd/system/cantaloupe.service <<END_CL
-[Unit]
-Description=Cantaloupe Image Server
-
-[Service]
-Type=simple
-User=cantaloupe
-ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/Cantaloupe-3.4.2.war
-ExecStop=/usr/bin/killall -9 Cantaloupe-3.4.2.war
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-END_CL
-
-systemctl daemon-reload
-
-systemctl enable cantaloupe.service
-
-systemctl start cantaloupe.service
-
-cat > /root/bin/cantaloupe-purge.sh <<END_CLP
-#!/bin/bash
-cd /usr/local/cantaloupe
-sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
-END_CLP
-```
-
-Root's crontab should contain something like this:
-```
-# Cantaloupe daily purge of cache
-00 23 * * * /root/bin/cantaloupe-purge.sh >>/root/cantaloupe-purge.log 2>&1
-```
 
 #### Setup Logging <a id="setup-logging"></a>
 Please note logging still needs some TLC: log4j and logrotate clash with some files: 
