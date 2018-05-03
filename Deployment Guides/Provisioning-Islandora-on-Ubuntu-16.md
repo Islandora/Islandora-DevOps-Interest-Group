@@ -88,9 +88,9 @@ cat ~/islandora-install.properties
     # NOTE adjust memory so that it is no larger than half of total system memory. Depending on stack deployment this can be adjusted further. We don’t recommend running stack on system with less than 4GB of ram. Recommend adding -XX:+UseParallelOldGC for multi cpu systems
     # NOTE uncomment one of the following two 'JAVA_OPTS' values, depending on where you chose to install Solr
     # - Solr installed under the same Tomcat as Fedora
-    #JAVA_OPTS="-Djava.awt.headless=true -Xms3072m -Xmx3072m -server -Djavax.net.ssl.trustStore=/usr/local/fedora/server/truststore -Djavax.net.ssl.trustStorePassword=tomcat -Dsolr.solr.home=/usr/local/fedora/solr -Dkakadu.home=/opt/adore-djatoka/bin/Linux-x86-64 -Djava.library.path=/opt/adore-djatoka/lib/Linux-x86-64 -DLD_LIBRARY_PATH=/opt/adore-djatoka/lib/Linux-x86-64"
+    #JAVA_OPTS="-Djava.awt.headless=true -Xms3072m -Xmx3072m -server -Djavax.net.ssl.trustStore=/usr/local/fedora/server/truststore -Djavax.net.ssl.trustStorePassword=tomcat -Dsolr.solr.home=/usr/local/fedora/solr -Dkakadu.home=/usr/local/adore-djatoka/bin/Linux-x86-64 -Djava.library.path=/usr/local/adore-djatoka/lib/Linux-x86-64 -DLD_LIBRARY_PATH=/usr/local/adore-djatoka/lib/Linux-x86-64"
     # - Solr installed under its own Jetty, for ease of migration to a different server if necessary, and to more recent versions of Solr in future
-    #JAVA_OPTS="-Djava.awt.headless=true -Xms3072m -Xmx3072m -XX:+UseParallelOldGC -server -Djavax.net.ssl.trustStore=/usr/local/fedora/server/truststore -Djavax.net.ssl.trustStorePassword=tomcat -Dkakadu.home=/opt/adore-djatoka/bin/Linux-x86-64 -Djava.library.path=/opt/adore-djatoka/lib/Linux-x86-64 -DLD_LIBRARY_PATH=/opt/adore-djatoka/lib/Linux-x86-64"
+    #JAVA_OPTS="-Djava.awt.headless=true -Xms3072m -Xmx3072m -XX:+UseParallelOldGC -server -Djavax.net.ssl.trustStore=/usr/local/fedora/server/truststore -Djavax.net.ssl.trustStorePassword=tomcat -Dkakadu.home=/usr/local/adore-djatoka/bin/Linux-x86-64 -Djava.library.path=/usr/local/adore-djatoka/lib/Linux-x86-64 -DLD_LIBRARY_PATH=/usr/local/adore-djatoka/lib/Linux-x86-64"
     JAVA_HOME=/usr/lib/jvm/java-8-oracle/jre
     # Moved this down below java install please change to match java version
     TOMCAT_BASE="http://localhost:8080"
@@ -101,7 +101,7 @@ cat ~/islandora-install.properties
     #SOLR_HOME="/usr/local/fedora"
     # - Solr stand alone
     #SOLR_BASE="http://localhost:8983/solr"
-    #SOLR_HOME="/opt/solr"
+    #SOLR_HOME="/usr/local/solr"
     ISLANDORA_BRANCH="7.x"
     TUQUE_BRANCH="1.x"
     ERROR_LEVEL="2"
@@ -421,16 +421,16 @@ systemctl stop blazegraph
 
 #### Fits  <a id="fits"></a>
 ```
-cd /opt
+cd /usr/local
 
 wget http://projects.iq.harvard.edu/files/fits/files/fits-0.10.1.zip
 
-unzip -o fits-0.10.1.zip && rm -rf fits-0.10.1.zip && ln -s fits-0.10.1 fits && chmod a+x /opt/fits/fits.sh
+unzip -o fits-0.10.1.zip && rm -rf fits-0.10.1.zip && ln -s fits-0.10.1 fits && chmod a+x /usr/local/fits/fits.sh
 ```
 
 #### adore-djatoka <a id="adore-djatoka-install"></a>
 ``` 
-cd /opt
+cd /usr/local
 
 wget http://sourceforge.net/projects/djatoka/files/djatoka/1.1/adore-djatoka-1.1.tar.gz/download -O adore-djatoka-1.1.tar.gz
 
@@ -441,11 +441,11 @@ ln -s adore-djatoka-1.1 adore-djatoka
 
 Make kakadu available on the command line:  
 ```
-ln -s /opt/adore-djatoka/bin/Linux-x86-64/kdu_expand /usr/bin/kdu_expand
+ln -s /usr/local/adore-djatoka/bin/Linux-x86-64/kdu_expand /usr/bin/kdu_expand
 
-ln -s /opt/adore-djatoka/bin/Linux-x86-64/kdu_compress /usr/bin/kdu_compress
+ln -s /usr/local/adore-djatoka/bin/Linux-x86-64/kdu_compress /usr/bin/kdu_compress
 
-echo "/opt/adore-djatoka/lib/Linux-x86-64" > /etc/ld.so.conf.d/kakadu.conf
+echo "/usr/local/adore-djatoka/lib/Linux-x86-64" > /etc/ld.so.conf.d/kakadu.conf
 
 ldconfig
 ```
@@ -456,11 +456,11 @@ Ubuntu 16.4 has Drush version 5.10, which is installed above. If that causes iss
 
 Specify drush commit due to issues with newer drush versions and automated tests used by QA:
 ```
-cd /opt
+cd /usr/local
 
 git clone https://github.com/drush-ops/drush.git && cd drush && git checkout b9e6c8c00da0fbf1227869cdf915b0c6cea466cc
 
-ln -s /opt/drush/drush /usr/bin/drush
+ln -s /usr/local/drush/drush /usr/bin/drush
 ```
 
 ### Configuration <a id="configuration"></a>  
@@ -921,9 +921,9 @@ cd trippi-sail-blazegraph-remote/target
 
 tar xf trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT-bin.tar.gz
 
-mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /opt/trippi-sail
+mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /usr/local/trippi-sail
 
-chown -R $FEDORA_USER:$FEDORA_USER /opt/trippi-sail
+chown -R $FEDORA_USER:$FEDORA_USER /usr/local/trippi-sail
 ```
 Configure Fedora:
 
@@ -934,7 +934,7 @@ In that file, insert the following before the `<Parameter name="fedora.home"` li
 ```
  <Loader
        className="org.apache.catalina.loader.VirtualWebappLoader"
-       virtualClasspath="/opt/trippi-sail/*.jar"
+       virtualClasspath="/usr/local/trippi-sail/*.jar"
        searchVirtualFirst="true"/>
 ```
 ```
@@ -974,7 +974,7 @@ Edit `$FEDORA_HOME/server/bin/env-server.sh`:
 In the `execWithTheseArgs()` function:
 ```
 -	-cp \"$webinf\"/classes:\"$FEDORA_HOME\"/server/bin:\"$webinf\"/lib/* \
-+	-cp \"$webinf\"/classes:/opt/trippi-sail/*:\"$FEDORA_HOME\"/server/bin:\"$webinf\"/lib/* \
++	-cp \"$webinf\"/classes:/usr/local/trippi-sail/*:\"$FEDORA_HOME\"/server/bin:\"$webinf\"/lib/* \
 ```
 
 `chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME`
@@ -1025,15 +1025,15 @@ chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME
 ```
 If you wish to install Solr under its own container, do the following (from http://dev.digibess.it/doku.php?id=reloaded:be_solr). We use Jetty, rather than Tomcat, because that's what the Solr developers have chosen to use ("Only Jetty recieves testing... No tests are done with other containers before release..." (http://lucene.472066.n3.nabble.com/difference-between-apache-tomcat-vs-Jetty-td4096680.html)).
 ```
-cp -R $SOLR_NAME/example /opt/solr
+cp -R $SOLR_NAME/example /usr/local/solr
 
-cp -R $SOLR_NAME/contrib /opt/solr/
+cp -R $SOLR_NAME/contrib /usr/local/solr/
 
-cp -R $SOLR_NAME/dist /opt/solr/
+cp -R $SOLR_NAME/dist /usr/local/solr/
 
 systemctl stop jetty9
 
-ln -s /usr/share/jetty9/start.ini /opt/solr/start.ini
+ln -s /usr/share/jetty9/start.ini /usr/local/solr/start.ini
 
 cp /etc/default/jetty9 /etc/default/solr
 ```
@@ -1042,11 +1042,11 @@ Edit `/etc/default/solr`:
 cat >>/etc/default/solr<<END_JT
 JAVA_HOME=/usr/lib/jvm/java-8-oracle
 # - adjust for your memory
-JAVA_OPTIONS="-Xmx256m -Xms256m -Djava.awt.headless=true -Dsolr.solr.home=/opt/solr/solr -Djava.net.preferIPv4Stack=true"
+JAVA_OPTIONS="-Xmx256m -Xms256m -Djava.awt.headless=true -Dsolr.solr.home=/usr/local/solr/solr -Djava.net.preferIPv4Stack=true"
 JETTY_USER=jetty
-JETTY_HOME=/opt/solr
+JETTY_HOME=/usr/local/solr
 JETTY_ARGS="jetty.port=8983"
-JETTY_LOGS=/opt/solr/logs
+JETTY_LOGS=/usr/local/solr/logs
 END_JT
 ```
 Turn off `jetty9` and configure the `solr` service:
@@ -1197,11 +1197,11 @@ cp target/gsearch_extensions-0.1.3-jar-with-dependencies.jar $CATALINA_HOME/weba
 
 Install djatoka war:  
 
-`cp /opt/adore-djatoka/dist/adore-djatoka.war $CATALINA_HOME/webapps && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/adore-djatoka*`
+`cp /usr/local/adore-djatoka/dist/adore-djatoka.war $CATALINA_HOME/webapps && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/adore-djatoka*`
 
 Optionally, install this under the Blazegraph Tomcat (for separability):
 
-`cp /opt/adore-djatoka/dist/adore-djatoka.war /usr/share/tomcat7-blzg/webapps && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/adore-djatoka*`
+`cp /usr/local/adore-djatoka/dist/adore-djatoka.war /usr/share/tomcat7-blzg/webapps && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/adore-djatoka*`
 
 Note: If you install Adore-Djatoka with Blazegraph, you will need to change the `ProxyPass` lines in your Apache configuration to port `8081` instead of `8080`.
 
@@ -1216,9 +1216,9 @@ wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Canta
 
 unzip Cantaloupe-3.4.2.zip
 
-mv Cantaloupe-3.4.2 /opt/
+mv Cantaloupe-3.4.2 /usr/local/
 
-ln -s /opt/Cantaloupe-3.4.2 /opt/cantaloupe
+ln -s /usr/local/Cantaloupe-3.4.2 /usr/local/cantaloupe
 
 mkdir -p /srv/cantaloupe/cache
 
@@ -1228,9 +1228,9 @@ mkdir /srv/cantaloupe/home
 
 useradd -d /srv/cantaloupe/home -s /bin/false cantaloupe
 
-chown -R cantaloupe:cantaloupe /srv/cantaloupe /opt/Cantaloupe-3.4.2
+chown -R cantaloupe:cantaloupe /srv/cantaloupe /usr/local/Cantaloupe-3.4.2
 
-cd /opt/cantaloupe
+cd /usr/local/cantaloupe
 
 cp cantaloupe.properties.sample cantaloupe.properties
 
@@ -1311,7 +1311,7 @@ Description=Cantaloupe Image Server
 [Service]
 Type=simple
 User=cantaloupe
-ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/opt/cantaloupe/cantaloupe.properties -Xmx256m -jar /opt/cantaloupe/Cantaloupe-3.4.2.war
+ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/Cantaloupe-3.4.2.war
 ExecStop=/usr/bin/killall -9 Cantaloupe-3.4.2.war
 Restart=on-failure
 
@@ -1327,8 +1327,8 @@ systemctl start cantaloupe.service
 
 cat > /root/bin/cantaloupe-purge.sh <<END_CLP
 #!/bin/bash
-cd /opt/cantaloupe
-sudo -u cantaloupe java -Dcantaloupe.config=/opt/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
+cd /usr/local/cantaloupe
+sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
 END_CLP
 ```
 
@@ -1685,7 +1685,7 @@ drush vset islandora_pdf_path_to_pdftotext `which pdftotext`
 
 drush vset islandora_metadata_display "islandora_solr_metadata"
 
-drush vset islandora_fits_executable_path "/opt/fits/fits.sh" 
+drush vset islandora_fits_executable_path "/usr/local/fits/fits.sh" 
 
 drush vset islandora_book_tesseract `which tesseract`  
 
