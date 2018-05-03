@@ -1014,7 +1014,7 @@ Set the default log level to `ERROR` instead of `WARN` (3 lines near the top).
 
 #### GSearch and Solr <a id="gsearch-solr"></a>
 
-Note: part of the reason we still use older (now very old) versions of Solr is that, as of Solr 5.0 (latest is 7.3), installing Solr as a WAR servlet under containers like Tomcat is no longer supported. Also, quite significant changes in the configuration files have also happened, which makes use of the `basic-solr-config` package from Discovery Garden more difficult. DigiBESS has moved only from Solr 4.2.0 to 4.10.4 and already there are significant changes in `solrconfig.xml` and `schema.xml`. Since some will wish to stick with the old ways, I'm including using 4.10.4 as optional. Hopefully this can be part of future migrations to more recent versions of Solr. Set the version of Solr you wish to use in your `install.properties`.
+Note: part of the reason we still use older (now very old) versions of Solr is that, as of Solr 5.0 (latest is 7.3), installing Solr as a WAR servlet under containers like Tomcat is no longer supported. Also, quite significant changes in the configuration files have also happened, which makes use of the `basic-solr-config` package from Discovery Garden more difficult. DigiBESS has moved only from Solr 4.2.0 to 4.10.4 and already there are significant changes in `solrconfig.xml` and `schema.xml`. Since some will wish to stick with the tried and true, we include using 4.10.4 as optional. Hopefully this can be part of future migrations to more recent versions of Solr. Set the version of Solr you wish to use in your `install.properties`.
 
 Grab fedoragsearch and solr - do basic config:  
 ```
