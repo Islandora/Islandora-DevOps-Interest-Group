@@ -133,7 +133,7 @@ cat ~/islandora-install.properties
 
     APACHE_DEFAULT_SITE="000-default"
     # NOTE: We are using php 7.1, and APC is now deprecated, in favour of Zend Opcache, so the following needs to be dealt with at a later date
-    APC_CONFIG_FILE="/etc/php/php7.1/mods-available/apcu.ini"
+    APC_CONFIG_FILE="/etc/php/7.1/mods-available/apcu.ini"
     APACHE_USER="www-data"
     APACHE_SERVICE="apache2"
     OS_DEFAULT_DOCUMENTROOT="/var/www"
@@ -172,6 +172,8 @@ apt-get -y install oracle-java8-installer oracle-java8-set-default libjpeg-dev l
 ```
 
 You will be prompted three times for interactive installation, once from MySQL (provide a 'root' password), once from Postfix (choose 'no configuration') and once from Oracle Java (say yes to the license). Be sure to update your `islandora-install.properties` file with the MySQL password (DB_ROOT_PASSWORD). There will be an error from installing Tomcat7 (it won't start correctly). Ignore it at this time.
+
+You should run `update-alternatives --config php` and make sure it is set to `php7.1`. Else Drupal will not install. This is because we are using the 7.1 Apache module and 7.2 material may well have been installed and set to the default for the OS during the `apt-get install`.
 
 Run `mysql_secure_installation`. You will be prompted for the root password and answers to various questions. If you have created a strong root password at this time, feel free to enable the password validation plugin and set the strength requirements appropriately. You can always do this again later if you wish to use a weak password during the setup phase. Answer yes to all the other questions.
 
@@ -282,7 +284,7 @@ Note that you need to ensure that your update-alternatives point to the right ja
 
 `update-alternatives --config javac`
 
-You should also, at this time, make your architecture choices in your `islandora-install.properties` file concerning where you will install Solr, what version, etc., as these affect the Tomcat settings we will implement in this next step.
+You should also, at this time, make your architecture choices in your `islandora-install.properties` file concerning where you will install Solr, what version, etc., as these affect the Tomcat settings we will implement in this next step. Source the file again if necessary.
 
 Configure Tomcat (based on http://dev.digibess.it/doku.php?id=reloaded:be_base).
 
@@ -304,7 +306,6 @@ sed -i s/^JAVA_OPTS/#JAVA_OPTS/ /etc/default/tomcat7
 cat >> /etc/default/tomcat7 <<END_JT
 JAVA_HOME=JAVA_HOME_T
 JAVA_OPTS="JAVA_OPTS_T"
-JAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"
 FEDORA_HOME=FEDORA_HOME_T
 END_JT
 
@@ -323,7 +324,6 @@ For example:
 ```
 JAVA_HOME=/usr/lib/jvm/java-8-oracle/jre
 JAVA_OPTS="-Xms3993m -Xmx3993m -Djavax.net.ssl.trustStore=/usr/local/fedora/server/truststore -Djavax.net.ssl.trustStorePassword=tomcat"
-JAVA_OPTS="${JAVA_OPTS} -XX:+UseConcMarkSweepGC -XX:MaxPermSize=256m"
 FEDORA_HOME=/usr/local/fedora
 ```
 
@@ -334,7 +334,7 @@ systemctl status tomcat7
 systemctl start tomcat7
 ```
 
-If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first `JAVA_OPTS` line in `/etc/default/tomcat7` with something simple, like `JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"`, to verify that Tomcat runs. Then enable the real value again and stop the service: `systemctl stop tomcat7`.
+If this fails, it could well be due to the memory settings, or other factors such as the specification of directories that don't yet exist. Replace the first `JAVA_OPTS` line in `/etc/default/tomcat7` with something simple, like `JAVA_OPTS="-Djava.awt.headless=true -Xmx128m"`, to verify that Tomcat runs. Then enable the real value again and stop the service: `systemctl stop tomcat7`.
 
 Optionally, add a Tomcat user for the admin interface. This should be disabled once testing is complete.
 
@@ -407,6 +407,8 @@ cp blazegraph_conf/log4j.properties /etc/bigdata/
 
 cp blazegraph_conf/blazegraph_init /etc/init.d/blazegraph
 
+rm -rf blazegraph_conf
+
 cd /usr/share/tomcat7-blzg/webapps/
 
 wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war
@@ -464,13 +466,13 @@ ldconfig
 This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa.
 
 ```
-cd ~
+cd /usr/local
 
 wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Cantaloupe-3.4.2.zip
 
 unzip Cantaloupe-3.4.2.zip
 
-mv Cantaloupe-3.4.2 /usr/local/
+rm -f Cantaloupe-3.4.2.zip
 
 ln -s /usr/local/Cantaloupe-3.4.2 /usr/local/cantaloupe
 
@@ -603,6 +605,8 @@ Edit `/etc/apache2/sites-available/000-default.conf`:
 
 Alternatively, for SSL encryption:
 
+It will be helpfull to have a proper DNS entry for your host name. Certificate authorities won't talk to you without one, for example. If you are doing this on a cloud VM behind a NAT this may be an issue. You should edit your `/etc/hosts` and `/etc/hostname` files appropriately.
+
 Edit `/etc/apache2/sites-available/000-default.conf`:
 
 ```
@@ -703,11 +707,10 @@ a2enmod proxy_http
 
 a2enmod headers
 
-a2enmod ssl
+# - do these if you are enabling https
+#a2enmod ssl
 
-add-apt-repository ppa:ondrej/php
-
-apt-get update
+#a2ensite default-ssl
 
 apt-get install php-uploadprogress
 
@@ -724,7 +727,7 @@ echo "apc.shm_size = 64M" >> $APC_CONFIG_FILE
 
 #### Setup MySQL Databases and Server <a id="setup-mysql"></a>
 
-Run `mysql_secure_installation` (interactive script) to ensure security, and then set up the Drupal and Fedora databases:
+Run `mysql_secure_installation` (interactive script) to ensure security, if you haven't already done so, and then set up the Drupal and Fedora databases:
  ``` 
 mysql_secure_installation
 
@@ -759,6 +762,8 @@ for dbname in $(/usr/bin/mysql --defaults-extra-file=/root/.my.cnf -Bse "show da
   fi
 done
 END_DBK
+
+chmod 750 /root/bin/mysqlbackup-rsnapshot.sh
 
 sed -i 's|snapshot_root.*|snapshot_root	/backups/|' /etc/rsnapshot.conf
 ```
@@ -901,7 +906,7 @@ systemctl stop tomcat7
 
 If you are keeping Fedora data outside Fedora home, while Tomcat is stopped (stop it if you haven't done so), do the following:
 ```
-mv $FEDORA_HOME/data/activemq-data /srv/fedora/activemq-data
+mv $FEDORA_HOME/data/activemq-data /srv/fedora/data/activemq-data
 
 ln -s /srv/fedora/data/activemq-data $FEDORA_HOME/data/
 
@@ -927,7 +932,7 @@ cd ~
 
 git clone https://github.com/Islandora/islandora-xacml-policies && cd islandora-xacml-policies 
 
-mkdir $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && cp *.xml $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && rm -rf ~/islandora-xacml-policies
+mkdir $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && cp *.xml $FEDORA_HOME/data/fedora-xacml-policies/repository-policies/islandora_policies && cd ~ && rm -rf ~/islandora-xacml-policies
 
 chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME
 
@@ -954,7 +959,13 @@ tar xf trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT-bin.tar.gz
 
 mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /usr/local/trippi-sail
 
+cp ~/trippi-sail/trippi-sail-blazegraph-remote/src/main/resources/sample-bean-config-xml/remote-blazegraph.xml $FEDORA_HOME/server/config/spring/
+
+cd ~ && rm -rf trippi-sail
+
 chown -R $FEDORA_USER:$FEDORA_USER /usr/local/trippi-sail
+
+chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME
 ```
 Configure Fedora:
 
@@ -967,9 +978,6 @@ In that file, insert the following before the `<Parameter name="fedora.home"` li
        className="org.apache.catalina.loader.VirtualWebappLoader"
        virtualClasspath="/usr/local/trippi-sail/*.jar"
        searchVirtualFirst="true"/>
-```
-```
-cp ~/trippi-sail/trippi-sail-blazegraph-remote/src/main/resources/sample-bean-config-xml/remote-blazegraph.xml $FEDORA_HOME/server/config/spring/
 ```
 Edit `$FEDORA_HOME/server/config/spring/remote-blazegraph.xml` (two edits, in quasi 'diff' format):
 
@@ -1008,8 +1016,6 @@ In the `execWithTheseArgs()` function:
 +	-cp \"$webinf\"/classes:/usr/local/trippi-sail/*:\"$FEDORA_HOME\"/server/bin:\"$webinf\"/lib/* \
 ```
 
-`chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME`
-
 `systemctl stop blazegraph`
 
 Edit `/etc/bigdata/log4j.properties`:
@@ -1039,6 +1045,8 @@ cd ~
 cp -v gsearch/FgsBuild/fromsource/fedoragsearch.war $CATALINA_HOME/webapps
 
 chown $FEDORA_USER:$FEDORA_USER $CATALINA_HOME/webapps/fedoragsearch.war
+
+rm -rf ~/gsearch
 
 wget $SOLR_URL
 
@@ -1187,17 +1195,17 @@ sed -i "s|<lib dir=\"../../..|<lib dir=\"$SOLR_HOME|" $SOLR_HOME/solr/$SOLR_DEFA
 
 sed -i "s|{solr.data.dir:}|{solr.data.dir:/srv/solr/data}|" $SOLR_HOME/solr/$SOLR_DEFAULT_CORE_PATH/conf/solrconfig.xml
 
-chown -R jetty:jety $SOLR_HOME
+chown -R jetty:jetty $SOLR_HOME
 ```
 Similarly, because of the location of the OS based Tomcat and the separation of Solr, we need to edit a few files in the `fedoragsearch` configuration:
 ```
 cd $CATALINA_HOME/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/
 
-sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" foxmlToSolr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" foxmlToSolr.xslt
 
-sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/slurp_all_MODS_to_solr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/slurp_all_MODS_to_solr.xslt
 
-sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/WORKFLOW_to_solr.xslt`
+sed -i "s|/usr/local/fedora/tomcat|$CATALINA_HOME|" islandora_transforms/WORKFLOW_to_solr.xslt
 
 # Do the two following if your Solr is not under the Fedora tree
 #sed -i "s|:8080/|:8983/|" index.properties
@@ -1222,13 +1230,17 @@ cd dgi_gsearch_extensions/
 mvn package
 
 cp target/gsearch_extensions-0.1.3-jar-with-dependencies.jar $CATALINA_HOME/webapps/fedoragsearch/WEB-INF/lib/
+
+cd ~
+
+rm -rf dgi_gsearch_extensions
 ```
 
 #### Adore-Djatoka <a id="adore-djatoka"></a>
 
 Install djatoka war:  
 
-`cp /usr/local/adore-djatoka/dist/adore-djatoka.war $CATALINA_HOME/webapps && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/adore-djatoka*`
+`cp /usr/local/adore-djatoka/dist/adore-djatoka.war $CATALINA_HOME/webapps && chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME/webapps/adore-djatoka*`
 
 Optionally, install this under the Blazegraph Tomcat (for separability):
 
@@ -1288,6 +1300,8 @@ cat > /root/bin/cantaloupe-purge.sh <<END_CLP
 cd /usr/local/cantaloupe
 sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
 END_CLP
+
+chmod 750 /root/bin/cantaloupe-purge.sh
 ```
 Root's crontab should contain something like this:
 ```
@@ -1363,7 +1377,7 @@ sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = tr
 
 #sed -i "s|HttpResolver.auth.basic.username =|HttpResolver.auth.basic.username = anonymous|" cantaloupe.properties
 
-#sed -i "s|HttpResolver.auth.basic.secret =|HttpResolver.auth.basic.username = secret|" cantaloupe.properties
+#sed -i "s|HttpResolver.auth.basic.secret =|HttpResolver.auth.basic.secret = anonymous|" cantaloupe.properties
 ```
 
 Islandora Vagrant uses a Cantaloupe provided script, called `delegates-3.4.rb` that permits "obfuscation" of URLs. We leave further configuration of this service as an exercise to the reader. See the DigiBESS site.
@@ -1388,17 +1402,13 @@ cp logging.properties $CATALINA_HOME/conf/logging.properties
 # - with Fedora
 #cp log4j.properties $CATALINA_HOME/webapps/adore-djatoka/WEB-INF/classes/log4j.properties
 # - with Blazegraph
-#cp log4j.properties /var/lib/tomcat7-blzg/webapps/adore-djatoka/WEB-INF/classes/log4j.properties
+#cp log4j.properties /usr/share/tomcat7-blzg/webapps/adore-djatoka/WEB-INF/classes/log4j.properties
 # - Also do the following if you installed Adore-Djatoka with Blazegraph
-#sed -i "s|/usr/local/fedora/server/logs|/var/bigdata/logs|" /var/lib/tomcat7-blzg/webapps/adore-djatoka/WEB-INF/classes/log4j.properties
+#sed -i "s|/usr/local/fedora/server/logs|/var/bigdata/logs|" /usr/share/tomcat7-blzg/webapps/adore-djatoka/WEB-INF/classes/log4j.properties
 
 cp logback.xml $FEDORA_HOME/server/config/logback.xml
 
-chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME 
-
-chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME 
-
-chown -R blazegraph:blazegraph /var/lib/tomcat7-blzg/
+chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/
 
 systemctl restart blazegraph
 ```
@@ -1482,6 +1492,8 @@ Start Fedora fully configured:
 
 `chown -R $FEDORA_USER:$FEDORA_USER $FEDORA_HOME`  
 
+`chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME` 
+
 `systemctl restart tomcat7`
 
 ### Install Drupal  <a id="install-drupal"></a>
@@ -1507,8 +1519,6 @@ mkdir sites/default/files
 mkdir sites/all/{modules,themes,libraries}
 
 cp sites/default/default.settings.php sites/default/settings.php
-
-cd sites/all/modules  
 ```
 
 #### Islandora Modules  <a id="islandora-modules"></a>
@@ -1640,6 +1650,7 @@ chmod +x modslist.sh
 
 rm modslist.sh
 ```
+Note: the `islandora_ip_embargo` module appears to depend on a missing module `islandora_access_override` which is not available. This will generate an error when enabling the modules in Drupal. You can ignore it.
 
 Dependency if `bagit` is to be used: 
  
@@ -1653,7 +1664,7 @@ git clone -b $TUQUE_BRANCH git://github.com/Islandora/tuque.git
 
 git clone  https://github.com/Islandora/internet_archive_bookreader.git bookreader
 
-wget http://openseadragon.github.io/releases/openseadragon-bin-2.3.2.zip  && unzip openseadragon-bin-2.3.2.zip && rm -rf openseadragon-bin-2.3.2.zip && mv openseadragon-bin-2.3.2 openseadragon
+wget https://github.com/openseadragon/openseadragon/releases/download/v2.3.1/openseadragon-bin-2.3.1.zip  && unzip openseadragon-bin-2.3.1.zip && rm -rf openseadragon-bin-2.3.1.zip && mv openseadragon-bin-2.3.1 openseadragon
 
 wget https://github.com/moxiecode/plupload/archive/v1.5.8.zip -O v1.5.8.zip && unzip -o v1.5.8.zip && rm -rf v1.5.8.zip && mv plupload-1.5.8 plupload
 
@@ -1663,16 +1674,18 @@ wget https://github.com/jackmoore/colorbox/archive/1.x.zip -O colorbox-1.x.zip &
 
 mkdir pdfjs && cd pdfjs && wget https://github.com/mozilla/pdf.js/releases/download/v1.9.426/pdfjs-1.9.426-dist.zip && unzip pdfjs-1.9.426-dist.zip && rm -rf pdfjs-1.9.426-dist.zip && cd ..
 
-mkdir jquery.cycle && cd jquery.cycle && wget http://malsup.github.com/jquery.cycle.all.js  
+mkdir jquery.cycle && cd jquery.cycle && wget http://malsup.github.com/jquery.cycle.all.js && cd .. 
 
-drush dl imagemagick libraries views ctools oauth chart google_analytics views_slideshow views_responsive_grid strongarm features designkit conditional_styles socialmedia widgets features_extra uuid node_export block_class ldap entity colorbox rules xmlsitemap css_injector token coder date datepicker devel pathauto jquery_update variable xmlsitemap
+drush dl imagemagick libraries views ctools oauth chart google_analytics views_slideshow views_responsive_grid strongarm features designkit conditional_styles socialmedia widgets features_extra uuid node_export block_class ldap entity colorbox rules xmlsitemap css_injector token date datepicker devel pathauto jquery_update variable xmlsitemap views_data_export
 ```
+
+Optionally, if you intend to do some Drupal coding, `drush dl coder`. You will be prompted to choose a version. Try item 1.
 
 #### Drupal site install <a id="drupal-site-install"></a>
 
 **Please note that you should consider making the drupal directory permissions more secure. These permissions will allow you to install modules through the drupal web interface however if this functionality is not required recommend locking down permissions using something such as https://github.com/discoverygarden/secure_drupal_file after the install.**
 ```
-chown -R $APACHE_USER:$APACHE_USER /var/www/drupal7 
+chown -R -H $APACHE_USER:$APACHE_USER /var/www/drupal7
 
 drush -y site-install standard --account-name=$DRUPAL_ADMIN_USER --account-pass=$DRUPAL_ADMIN_PASS --db-url=mysql://$DRUPAL_DB_USER:$DRUPAL_DB_PASS@localhost/$DRUPAL_DB_NAME
 ```
@@ -1682,7 +1695,7 @@ Secure `settings.php`:
 
 Drush Enables and Configuration:
 ```
-drush -y en block color comment contextual dashboard dblog field field_sql_storage field_ui file filter help image list menu node number options overlay path rdf shortcut system taxonomy text toolbar user bartik seven imagemagick libraries views update ctools oauth_common oauth_common_providerui system_charts chart_views chart googleanalytics views_responsive_grid strongarm features designkit conditional_styles fe_block uuid node_export node_export_features widgets socialmedia block_class colorbox rules entity_token css_injector token coder date datepicker devel pathauto jquery_update variable xmlsitemap
+drush -y en block color comment contextual dashboard dblog field field_sql_storage field_ui file filter help image list menu node number options overlay path rdf shortcut system taxonomy text toolbar user bartik seven imagemagick libraries views update ctools oauth_common oauth_common_providerui system_charts chart_views chart googleanalytics views_responsive_grid strongarm features designkit conditional_styles fe_block uuid node_export node_export_features widgets socialmedia block_class colorbox rules entity_token css_injector token date datepicker devel pathauto jquery_update variable xmlsitemap views_data_export
 
 drush -y colorbox-plugin
 
@@ -1694,7 +1707,7 @@ drush vset islandora_solr_url "$SOLR_BASE"
 
 drush -y --user=1 en islandora islandora_audio islandora_basic_collection islandora_basic_image islandora_fits islandora_importer islandora_openseadragon islandora_simple_workflow islandora_video islandora_videojs islandora_pdf  islandora_paged_content islandora_ocr islandora_internet_archive_bookreader islandora_large_image islandora_book islandora_batch islandora_book_batch xml_form_api xml_form_elements xml_schema_api objective_forms php_lib islandora_solr islandora_solr_config islandora_solr_views islandora_ga_reports islandora_scholar islandora_oai google_analytics_reports islandora_importer xml_form_builder xml_forms islandora_bibliography islandora_scholar_embargo islandora_google_scholar islandora_marcxml islandora_xacml_editor islandora_xacml_api zip_importer pmid_importer ris_importer islandora_bookmark doi_importer endnotexml_importer citation_exporter bartik seven imagemagick libraries views views_ui ctools csl citeproc oauth_common oauth_common_providerui system_charts chart_views chart googleanalytics islandora_compound_object islandora_ip_embargo islandora_newspaper views_slideshow views_slideshow_cycle islandora_featured_collection islandora_solr_metadata islandora_document islandora_jodconverter islandora_entities islandora_entities_csv_import islandora_binary_object islandora_badges islandora_newspaper_batch islandora_pathauto islandora_pdfjs islandora_solr_facet_pages islandora_web_archive islandora_form_fieldpanel islandora_usage_stats islandora_xmlsitemap
 
-drush -y videojs-plugin
+drush -y islandora_videojs videojs-plugin
 
 drush php-eval "variable_set('islandora_large_image_viewers', array('name' => array('none' => 'none', 'islandora_openseadragon' => 'islandora_openseadragon'),'default' => 'islandora_openseadragon'));"
 
