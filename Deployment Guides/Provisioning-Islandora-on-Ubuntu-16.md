@@ -781,6 +781,8 @@ backup	/var/bigdata/	localhost/
 backup	/srv/fedora/data/	localhost/
 backup_script	/root/bin/mysqlbackup-rsnapshot.sh	localhost/mysql/
 ```
+Note: `/etc/rsnapshot.conf` is picky about using TABs instead of spaces, so you will likely have to manually clean up the results of the above instructions.
+
 Root's crontab should be something like this:
 ```
 # 'rsnapshot' backup schedule: every four hours, daily, weekly, monthly
