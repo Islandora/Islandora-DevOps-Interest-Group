@@ -3,7 +3,7 @@ Within this repository, there will be a stand alone bash script designed to inst
 
 This document is for the evaluation and testing of Islandora but with the secondary purpose of explaining all involved installation steps for wider Islandora adoption and educational transparency.
 
-This version is an update of the "Provisioning Islandora on Ubuntu" Deployment Guide, based on Ubuntu 16 instead of 14, and including some optional configurations, such as replacing Mulgara with Blazegraph. Significant inspiration for some deviations from the previous architecture can be blamed on "DigiBESS RELOADED", http://dev.digibess.it/doku.php?id=reloaded, as well as the current Islandora Vagrant.
+This version is an update of the "Provisioning Islandora on Ubuntu" Deployment Guide, based on Ubuntu 16 instead of 14, and including some optional configurations, such as replacing Mulgara with Blazegraph. Significant inspiration for some deviations from the previous architecture comes from "DigiBESS RELOADED", http://dev.digibess.it/doku.php?id=reloaded, as well as the current Islandora Vagrant. In particular, the option of placing data outside of the Fedora tree follows DigiBESS (http://dev.digibess.it/doku.php?id=reloaded:be_fedora), as well as the installation of Cantaloupe, though this is now also an option in the Islandora Vagrant.
 
 We recommend that you read through all the way, before starting, in order to make some architecture decisions.
 
@@ -223,11 +223,11 @@ checkinstall --pkgname=libvpx --pkgversion="1:$(date +%Y%m%d%H%M)-git" --backup=
 ```
 cd ~/ffmpeg-source
 
-wget http://www.ffmpeg.org/releases/ffmpeg-1.1.1.tar.gz
+wget http://www.ffmpeg.org/releases/ffmpeg-3.3.7.tar.gz
 
-tar xf ffmpeg-1.1.1.tar.gz && rm -rf ffmpeg-1.1.1.tar.gz  
+tar xf ffmpeg-1.1.1.tar.gz && rm -rf ffmpeg-3.3.7.tar.gz  
 
-cd ffmpeg-1.1.1
+cd ffmpeg-3.3.7
 ```
 
 Had to do this to remove strange characters that cause build errors.
@@ -236,7 +236,7 @@ sed -i 's/×/x/' doc/filters.texi
 
 sed -i 's/×/x/' doc/ffmpeg.texi
 
-./configure --enable-gpl --enable-libass --enable-libfaac --enable-libfdk-aac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-librtmp --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3 --enable-libopus
+./configure --enable-gpl --enable-libass --enable-libfdk-aac --enable-libfdk-aac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-librtmp --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3 --enable-libopus
 
 make
 
@@ -288,7 +288,7 @@ You should also, at this time, make your architecture choices in your `islandora
 
 Configure Tomcat (based on http://dev.digibess.it/doku.php?id=reloaded:be_base).
 
-We create directories for the repository data outside of Fedora home, so that it is easier in future to expand storage, or to use a SAN.
+We create directories for the repository data outside of Fedora home, so that it is easier in future to expand storage, or to use a SAN. This follows the architecture of DigiBESS.
 ```
 mkdir /usr/local/fedora
 
@@ -349,7 +349,7 @@ Edit `/etc/tomcat7/tomcat-users.xml`:
 
 #### Blazegraph  <a id="blazegraph"></a>
 
-This step is optional. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:be_blazeg. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail). This also makes migrating this service to a separate machine easier.
+This step is optional. Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
 
 Install and configure a second Tomcat.
 ```
@@ -434,9 +434,9 @@ systemctl stop blazegraph
 ```
 cd /usr/local
 
-wget http://projects.iq.harvard.edu/files/fits/files/fits-0.10.1.zip
+wget http://projects.iq.harvard.edu/files/fits/files/fits-1.1.1.zip
 
-unzip -o fits-0.10.1.zip && rm -rf fits-0.10.1.zip && ln -s fits-0.10.1 fits && chmod a+x /usr/local/fits/fits.sh
+unzip -o fits-1.1.1.zip && rm -rf fits-1.1.1.zip && ln -s fits-1.1.1 fits && chmod a+x /usr/local/fits/fits.sh
 ```
 
 #### Adore-Djatoka Install<a id="adore-djatoka-install"></a>
@@ -463,7 +463,7 @@ ldconfig
 
 #### Cantaloupe Install<a id="cantaloupe-install"></a>
 
-This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa.
+This is optional. Cantaloupe is an alternative large image display processer to Adore-Djatoka, for use with the Openseadragon viewer. Instructions are closely based on http://dev.digibess.it/doku.php?id=reloaded:is_cantsa, with the latest version of Cantaloupe.
 
 ```
 cd /usr/local
@@ -889,6 +889,8 @@ If you are keeping data separated from Fedora home, e.g. in `/srv/fedora/`, then
 
 Edit that file and find the `<bean name="fsObjectStore"` and `<bean name="fsDatastreamStore"` clauses and replace the `<constructor-arg value="PATH"` values with appropriate ones for your installation, e.g. `/srv/fedora/data/objectStore` and `/srv/fedora/data/datastreamStore`.
 
+Alternatively, soft links also work (Thanks '@lutaylor'!), though if you edit as above, before Fedora does its initial run, Fedora will create the directories correctly. If you are migrating an existing Fedora, use softlinks, as below for `activemq-data`.
+
 Also:
 
 `cp $FEDORA_HOME/server/fedora-internal-use/config/akubra-llstore.xml $FEDORA_HOME/server/fedora-internal-use/config/akubra-llstore.xml.bak`
@@ -903,6 +905,7 @@ Note: at this point Fedora may not start for you unless your host has a 'real' h
 
 ```
 systemctl stop tomcat7
+
 /usr/local/fedora/server/bin/fedora-rebuild.sh
 ```
 
@@ -943,7 +946,7 @@ systemctl restart tomcat7
 
 #### Replace Mulgara with Blazegraph <a id="mulgara-blazegraph"></a>
 
-This is optional. The instructions are based on http://dev.digibess.it/doku.php?id=reloaded:be_repmulg.
+This is optional. The instructions follow http://dev.digibess.it/doku.php?id=reloaded:be_repmulg. See also https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph.
 
 Install Trippi-sail:
 ```
@@ -1422,10 +1425,32 @@ rm -rf islandora_log_config
 #### Drupal Filter <a id="drupal-filter"></a>
 
 Setup Drupal filter:  
-```
-cd $CATALINA_HOME/webapps/fedora/WEB-INF/lib 
 
-wget --no-check-certificate $DRUPAL_FILTER_URL 
+This follows instructions from https://github.com/discoverygarden/fcrepo3-security-jaas/blob/master/README.md (thanks @lutaylor!).
+
+See also: https://github.com/discoverygarden/fcrepo3-security-jaas/blob/master/docs/multisite-optimization.md.
+```
+cd ~
+
+# - gets us version 7.1.11
+git clone https://github.com/Islandora/islandora_drupal_filter.git
+
+cd islandora_drupal_filter
+
+mvn -Dfedora.version=$FEDORA_VERSION install
+
+cd ~
+
+mv islandora_drupal_filter/target/fcrepo-drupalauthfilter-3.8.1.jar $CATALINA_HOME/webapps/fedora/WEB-INF/lib/
+
+chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
+
+#Note: The following currently fails to compile, due to a missing dependency (possibly 'islandora_drupal_filter' v 7.1.10)
+#git clone https://github.com/discoverygarden/fcrepo3-security-jaas.git
+
+#cd fcrepo3-security-jaas/
+
+#mvn package -Dfedora.version=$FEDORA_VERSION
 
 cat > $FEDORA_HOME/server/config/jass.conf <<END_DF
 fedora-auth
@@ -1633,6 +1658,8 @@ git clone https://github.com/discoverygarden/solrmetadataconfigs.git
 
 git clone https://github.com/discoverygarden/islandora_solution_pack_document.git
 
+git clone https://github.com/discoverygarden/islandora_gsearcher.git
+
 git clone https://github.com/discoverygarden/islandora_jodconverter.git
 
 git clone https://github.com/discoverygarden/islandora_plupload.git
@@ -1786,6 +1813,8 @@ drush cc all
 Don't forget to configure the Temporary directory, as discussed in the LibreOffice section.
 
 ### Follow-up Notes <a id="notes"></a>
+
+Islandora GSearcher is installed but not enabled. See `https://github.com/discoverygarden/islandora_gsearcher` for more information.
 
 More tesseract languages can be found here: [https://code.google.com/p/tesseract-ocr/downloads/list](https://code.google.com/p/tesseract-ocr/downloads/list)
 
