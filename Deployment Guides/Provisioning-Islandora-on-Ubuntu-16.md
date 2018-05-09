@@ -38,7 +38,7 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
   * [Setup MySQL Databases and Server](#setup-mysql)
 * [Install Fedora Commons](#fedora)
   * [Fedora Commons Base Install](#fedora-base)
-  * [XACML Settings](#xacml-setings)
+  * [XACML Settings](#xacml-settings)
   * [Replace Mulgara with Blazegraph](#mulgara-blazegraph)
   * [GSearch and Solr](#gsearch-solr)
   * [Solr Configuration](#solr-configuration)
