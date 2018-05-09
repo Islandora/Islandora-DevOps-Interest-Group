@@ -1039,7 +1039,7 @@ Grab fedoragsearch and solr - do basic config:
 ```
 cd ~  
 
-git clone https://github.com/fcrepo3/gsearch.git
+git clone https://github.com/discoverygarden/gsearch.git
 
 cd gsearch/FedoraGenericSearch
 
