@@ -986,7 +986,7 @@ In that file, insert the following before the `<Parameter name="fedora.home"` li
 ```
 Edit `$FEDORA_HOME/server/config/spring/remote-blazegraph.xml` (two edits, in quasi 'diff' format):
 
-In the `<bean id="remoteRepoFactory"` clause insert two lines (careful about the port):
+In the `<bean id="remoteRepoFactory"` clause insert two lines, or edit the first if already there (careful about the port):
 ```
 +               <constructor-arg type="java.lang.String" value="http://localhost:8081/blazegraph"/>
 +               <constructor-arg type="boolean" value="false"/>
