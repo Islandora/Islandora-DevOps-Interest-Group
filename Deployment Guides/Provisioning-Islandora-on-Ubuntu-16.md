@@ -1439,59 +1439,61 @@ chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
 
 #mvn package -Dfedora.version=$FEDORA_VERSION
 
-cat > $FEDORA_HOME/server/config/jaas.conf <<END_DF
-fedora-auth
-{
-	org.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required
-	debug=true;
-	ca.upei.roblib.fedora.servletfilter.DrupalAuthModule required
-	debug=true;
-};
-
-fedora-auth-xmlusersfile
-{
-	org.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required
-	debug=true;
-};
-
-fedora-auth-ldap-bind
-{
-	org.fcrepo.server.security.jaas.auth.module.LdapModule required
-	host.url="ldap://dev01.muradora.org"
-	auth.type="simple"
-	bind.mode="bind"
-	bind.filter="uid={0},ou=people,dc=muradora,dc=org"
-	debug=true;
-};
-
-fedora-auth-ldap-bind-search-bind
-{
-	org.fcrepo.server.security.jaas.auth.module.LdapModule required
-	host.url="ldap://dev01.muradora.org"
-	auth.type="simple"
-	bind.mode="bind-search-bind"
-	bind.user="uid=binduser,ou=people,dc=muradora,dc=org"
-	bind.pass="murabind"
-	search.base="ou=people,dc=muradora,dc=org"
-	search.filter="(uid={0})"
-	attrs.fetch="cn,sn,mail,displayName,carLicense"
-	debug=true;
-};
-
-fedora-auth-ldap-bind-search-compare
-{
-	org.fcrepo.server.security.jaas.auth.module.LdapModule required
-	host.url="ldap://dev01.muradora.org"
-	auth.type="simple"
-	bind.mode="bind-search-compare"
-	bind.user="uid=binduser,ou=people,dc=muradora,dc=org"
-	bind.pass="murabind"
-	search.base="ou=people,dc=muradora,dc=org"
-	search.filter="(uid={0})"
-	attrs.fetch="cn,sn,mail,displayName,carLicense"
-	debug=true;
+read -r -d '' jaas<< END_DF
+fedora-auth\n
+{\n
+\torg.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required\n
+\tdebug=true;\n
+\tca.upei.roblib.fedora.servletfilter.DrupalAuthModule required\n
+\tdebug=true;\n
+};\n
+\n
+fedora-auth-xmlusersfile\n
+{\n
+\torg.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required\n
+\tdebug=true;\n
+};\n
+\n
+fedora-auth-ldap-bind\n
+{\n
+\torg.fcrepo.server.security.jaas.auth.module.LdapModule required\n
+\thost.url="ldap://dev01.muradora.org"\n
+\tauth.type="simple"\n
+\tbind.mode="bind"\n
+\tbind.filter="uid={0},ou=people,dc=muradora,dc=org"\n
+\tdebug=true;\n
+};\n
+\n
+fedora-auth-ldap-bind-search-bind\n
+{\n
+\torg.fcrepo.server.security.jaas.auth.module.LdapModule required\n
+\thost.url="ldap://dev01.muradora.org"\n
+\tauth.type="simple"\n
+\tbind.mode="bind-search-bind"\n
+\tbind.user="uid=binduser,ou=people,dc=muradora,dc=org"\n
+\tbind.pass="murabind"\n
+\tsearch.base="ou=people,dc=muradora,dc=org"\n
+\tsearch.filter="(uid={0})"\n
+\tattrs.fetch="cn,sn,mail,displayName,carLicense"\n
+\tdebug=true;\n
+};\n
+\n
+fedora-auth-ldap-bind-search-compare\n
+{\n
+\torg.fcrepo.server.security.jaas.auth.module.LdapModule required\n
+\thost.url="ldap://dev01.muradora.org"\n
+\tauth.type="simple"\n
+\tbind.mode="bind-search-compare"\n
+\tbind.user="uid=binduser,ou=people,dc=muradora,dc=org"\n
+\tbind.pass="murabind"\n
+\tsearch.base="ou=people,dc=muradora,dc=org"\n
+\tsearch.filter="(uid={0})"\n
+\tattrs.fetch="cn,sn,mail,displayName,carLicense"\n
+\tdebug=true;\n
 };
 END_DF
+
+echo -e $jaas > $FEDORA_HOME/server/config/jaas.conf
 
 cd $FEDORA_HOME/server/config  
 
