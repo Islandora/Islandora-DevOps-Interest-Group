@@ -1107,7 +1107,7 @@ cp /usr/share/jetty9/bin/jetty.sh /etc/init.d/solr
 
 chmod +x /etc/init.d/solr
 ```
-Insert the following in `/etc/init.d/solr` at line 17 (just after the `chkconfig` block):
+Replace the `chkconfig` block in `/etc/init.d/solr` with the following:
 ```
 # chkconfig: 2345 64 36
 # description: Jetty9 with Solr
@@ -1127,22 +1127,9 @@ mkdir -p /srv/solr/data
 
 chown -R jetty:jetty /srv/solr
 
-cat > /etc/systemd/system/solr.service<<END_SS
-[Unit]
-Description=Solr Index running under jetty9
-SourcePath=/etc/init.d/solr
+update-rc.d solr defaults
 
-[Service]
-Type=simple
-ExecStart=/etc/init.d/solr start
-ExecStop=/etc/init.d/solr stop
-#Restart=/etc/init.d/solr restart
-
-[Install]
-WantedBy=multi-user.target
-END_SS
-
-systemctl enable solr.service
+systemctl enable solr
 ```
 Prepare `fedoragsearch`:
 ```
@@ -1424,7 +1411,7 @@ rm -rf islandora_log_config
 
 #### Drupal Filter <a id="drupal-filter"></a>
 
-Setup Drupal filter:  
+Setup Drupal filter:
 
 This follows instructions from https://github.com/discoverygarden/fcrepo3-security-jaas/blob/master/README.md (thanks @lutaylor!).
 
