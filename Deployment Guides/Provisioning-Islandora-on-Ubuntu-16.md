@@ -1439,7 +1439,7 @@ chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
 
 #mvn package -Dfedora.version=$FEDORA_VERSION
 
-cat > $FEDORA_HOME/server/config/jass.conf <<END_DF
+cat > $FEDORA_HOME/server/config/jaas.conf <<END_DF
 fedora-auth
 {
 	org.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required
