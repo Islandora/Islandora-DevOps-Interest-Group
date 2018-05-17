@@ -582,15 +582,6 @@ Edit `/etc/apache2/sites-available/000-default.conf`:
 
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 
-    # These are needed for getting Adore-Djatoka working over https
-    ProxyPass /fedora/get http://localhost:8080/fedora/get
-    ProxyPassReverse /fedora/get http://localhost:8080/fedora/get
-    ProxyPass /fedora/services http://localhost:8080/fedora/services
-    ProxyPassReverse /fedora/services http://localhost:8080/fedora/services
-    ProxyPass /fedora/describe http://localhost:8080/fedora/describe
-    ProxyPassReverse /fedora/describe http://localhost:8080/fedora/describe
-    ProxyPass /fedora/risearch http://localhost:8080/fedora/risearch
-    ProxyPassReverse /fedora/risearch http://localhost:8080/fedora/risearch
     # These are for Adore-Djatoka, and work fine over http but not over https
     ProxyPass /adore-djatoka http://localhost:8080/adore-djatoka
     ProxyPassReverse /adore-djatoka http://localhost:8080/adore-djatoka
@@ -667,7 +658,9 @@ And edit `/etc/apache2/sites-available/default-ssl.conf`:
              Allow from all
          </Proxy>
 
-         # These are needed for getting Adore-Djatoka working over https
+         # These are needed for getting Adore-Djatoka working over https according to:
+	 # https://groups.google.com/forum/?pli=1#!msg/islandora/yWlpQtL8gEU/cxF4ZmvbY8YJ
+	 # - use of these in a production environment should be evaluated carefully!
          # - this port is correct if Adore-Djatoka is installed under the same Tomcat as Fedora. Change if installed with Blazegraph.
          ProxyPass /fedora/get http://localhost:8080/fedora/get
          ProxyPassReverse /fedora/get http://localhost:8080/fedora/get
@@ -1428,21 +1421,28 @@ mvn -Dfedora.version=$FEDORA_VERSION install
 
 cd ~
 
-mv islandora_drupal_filter/target/fcrepo-drupalauthfilter-3.8.1.jar $CATALINA_HOME/webapps/fedora/WEB-INF/lib/
+mv islandora_drupal_filter/target/fcrepo-drupalauthfilter-$FEDORA_VERSION.jar $CATALINA_HOME/webapps/fedora/WEB-INF/lib/
 
 chown -R $FEDORA_USER:$FEDORA_USER $CATALINA_HOME
 
 #Note: The following currently fails to compile, due to a missing dependency (possibly 'islandora_drupal_filter' v 7.1.10)
+
 #git clone https://github.com/discoverygarden/fcrepo3-security-jaas.git
 
 #cd fcrepo3-security-jaas/
 
 #mvn package -Dfedora.version=$FEDORA_VERSION
 
+# Use the binary release instead:
+
+wget https://github.com/discoverygarden/fcrepo3-security-jaas/releases/download/v0.0.3/fcrepo3-security-jaas-0.0.3-fcrepo3.8.1.jar
+
+mv fcrepo3-security-jaas-0.0.3-fcrepo3.8.1.jar $CATALINA_HOME/webapps/fedora/WEB-INF/lib/
+
 read -r -d '' jaas<< END_DF
 fedora-auth\n
 {\n
-\torg.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required\n
+\tca.discoverygarden.fcrepo3.security.jaas.module.XmlUsersFileModule required\n
 \tdebug=true;\n
 \tca.upei.roblib.fedora.servletfilter.DrupalAuthModule required\n
 \tdebug=true;\n
@@ -1450,7 +1450,7 @@ fedora-auth\n
 \n
 fedora-auth-xmlusersfile\n
 {\n
-\torg.fcrepo.server.security.jaas.auth.module.XmlUsersFileModule required\n
+\tca.discoverygarden.fcrepo3.security.jaas.module.XmlUsersFileModule required\n
 \tdebug=true;\n
 };\n
 \n
