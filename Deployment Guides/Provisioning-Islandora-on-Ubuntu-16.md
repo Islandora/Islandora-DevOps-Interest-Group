@@ -658,19 +658,9 @@ And edit `/etc/apache2/sites-available/default-ssl.conf`:
              Allow from all
          </Proxy>
 
-         # These are needed for getting Adore-Djatoka working over https according to:
-	 # https://groups.google.com/forum/?pli=1#!msg/islandora/yWlpQtL8gEU/cxF4ZmvbY8YJ
-	 # - use of these in a production environment should be evaluated carefully!
-         # - this port is correct if Adore-Djatoka is installed under the same Tomcat as Fedora. Change if installed with Blazegraph.
-         ProxyPass /fedora/get http://localhost:8080/fedora/get
-         ProxyPassReverse /fedora/get http://localhost:8080/fedora/get
-         ProxyPass /fedora/services http://localhost:8080/fedora/services
-         ProxyPassReverse /fedora/services http://localhost:8080/fedora/services
-         ProxyPass /fedora/describe http://localhost:8080/fedora/describe
-         ProxyPassReverse /fedora/describe http://localhost:8080/fedora/describe
-         ProxyPass /fedora/risearch http://localhost:8080/fedora/risearch
-         ProxyPassReverse /fedora/risearch http://localhost:8080/fedora/risearch
          # These are for Adore-Djatoka, and work fine over http but not over https
+	 # - see https://groups.google.com/forum/?pli=1#!msg/islandora/yWlpQtL8gEU/cxF4ZmvbY8YJ
+         # - this port is correct if Adore-Djatoka is installed under the same Tomcat as Fedora. Change if installed with Blazegraph.
          ProxyPass /adore-djatoka http://localhost:8080/adore-djatoka
          ProxyPassReverse /adore-djatoka http://localhost:8080/adore-djatoka
 
