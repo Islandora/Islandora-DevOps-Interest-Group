@@ -225,7 +225,7 @@ cd ~/ffmpeg-source
 
 wget http://www.ffmpeg.org/releases/ffmpeg-3.3.7.tar.gz
 
-tar xf ffmpeg-1.1.1.tar.gz && rm -rf ffmpeg-3.3.7.tar.gz  
+tar xf ffmpeg-3.3.7.tar.gz && rm -rf ffmpeg-3.3.7.tar.gz  
 
 cd ffmpeg-3.3.7
 ```
@@ -1754,6 +1754,9 @@ drush php-eval "variable_set('islandora_ocr_tesseract_enabled_languages', array(
 drush vset islandora_lame_url `which lame`
 
 drush vset islandora_video_ffmpeg_path `which ffmpeg`  
+
+# We use the Fraunhofer AAC codec with ffmpeg because the latter no longer supports 'libaac'
+drush -y vset islandora_video_mp4_audio_codec "libfdk_aac"
 
 drush vset islandora_video_ffmpeg2theora_path `which ffmpeg2theora`  
 
