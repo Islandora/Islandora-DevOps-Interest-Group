@@ -21,7 +21,6 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
 * [Software Dependencies](#package-installation)
   * [From Apt-Get Package Manager](#from-apt-get)
   * [From Source](#from-source)
-   * [ghostscript](#ghostscript)
    * [libvpx](#libvpx)
    * [ffmpeg](#ffmpeg)
   * [From Binaries](#from-binary)
@@ -163,7 +162,7 @@ chmod +x ~/islandora-install.properties
 ### Software Dependencies Installed by Apt-Get Package Manager <a id="from-apt-get"></a>
 Accept license agreement and enter root password when asked.
 
-Note: we use php7.1, while both 7.0 and 7.2 are available. 7.0 is too close to end of life, and 7.2 produces difficult to manage 'deprectated' errors in Drupal 7 (the 'each()' function is deprecated as of 7.2). You can go to 7.2, but setting 'error_reporting' to exclude deprecations doesn't seem to do anything.
+Note: we use php7.1, while both 7.0 and 7.2 are available. 7.0 is too close to end of life, and 7.2 produces difficult to manage 'deprectated' errors in Drupal 7 (the 'each()' function is deprecated as of 7.2). You can go to 7.2, but setting 'error_reporting' to exclude deprecations doesn't seem to do anything. Ubuntu will continue to back port security fixes to the 7.0 tree for the life of 16 LTS, so if you wish, you could stay at 7.0.
 
 Also note: 'imagemagick' in the default Ubuntu 16 repository does not supprt JPEG2000. Someone has made a patched repo (ppa:lyrasis/imagemagick-jp2) but it is now out of date. So if you need this functionality you may need to compile from source or force install an older version. The needed functionality is available from Openjpeg.
 
@@ -178,26 +177,6 @@ You should run `update-alternatives --config php` and make sure it is set to `ph
 Run `mysql_secure_installation`. You will be prompted for the root password and answers to various questions. If you have created a strong root password at this time, feel free to enable the password validation plugin and set the strength requirements appropriately. You can always do this again later if you wish to use a weak password during the setup phase. Answer yes to all the other questions.
 
 ### Software Dependencies Compiled from Source <a id="from-source"></a> 
-
-#### ghostscript  <a id="ghostscript"></a>
-
-**Notes:** Ubuntu 14.04 installs ghostscript 9.10 which is currently failing our test sets and prevents tiffs from being generated from pdfs. Recommend installing from source to get correct version. Ubuntu 16.04 installs ghostscript 9.18, which appears to work. So the following is optional.
-```
-cd ~
-
-wget http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.05.tar.gz
-
-tar xvzf ghostscript-9.05.tar.gz
-
-cd ghostscript-9.05
-  
-./configure
- 
-make && make install
-
-`gs --version` #should return result.
-
-```
 
 ffmpeg build location
 ```
