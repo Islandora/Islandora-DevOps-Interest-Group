@@ -460,6 +460,8 @@ mkdir -p /srv/cantaloupe/cache
 mkdir /srv/cantaloupe/log
 
 mkdir /srv/cantaloupe/home
+
+mkdir /srv/cantaloupe/tmp
 ```
 
 #### Drush  <a id="drush"></a>
@@ -1268,7 +1270,7 @@ cd /usr/local/cantaloupe
 
 cp cantaloupe.properties.sample cantaloupe.properties
 
-sed -i "s|temp_pathname = *|temp_pathname = /srv/tmp|" cantaloupe.properties
+sed -i "s|temp_pathname = *|temp_pathname = /srv/cantaloupe/tmp|" cantaloupe.properties
 
 sed -i "s|http.host = 0.0.0.0|http.host = 127.0.0.1|" cantaloupe.properties
 
