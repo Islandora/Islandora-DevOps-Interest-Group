@@ -226,7 +226,7 @@ make install
 hash -r
 ```
 
-The following should tell apt to not upgrade ffmpeg (we need version 1.1.1):  
+The following should tell apt to not upgrade ffmpeg:  
 
 `apt-mark hold ffmpeg`
 
@@ -330,7 +330,7 @@ Edit `/etc/tomcat7/tomcat-users.xml`:
 
 This step is optional. Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
 
-Install and configure a second Tomcat.
+Install and configure a second Tomcat. You should use the latest version of Tomcat 7. See "https://tomcat.apache.org/download-70.cgi" and adjust the URL, etc., below.
 ```
 cd /usr/share
 
@@ -569,6 +569,7 @@ Edit `/etc/apache2/sites-available/000-default.conf`:
     # These are for Cantaloupe. Don't expose backend's tech/ver/brand. They work fine over both http and https
     # - This port is correct if Cantaloupe is installed under the same Tomcat as Fedora. Change if using standalone Cantaloupe.
     RequestHeader set X-Forwarded-Path /
+    ProxyRequests off
     ProxyPass /iiif/2 http://localhost:8080/cantaloupe/iiif/2
     ProxyPassReverse /iiif/2 http://localhost:8080/cantaloupe/iiif/2
     
@@ -634,10 +635,6 @@ And edit `/etc/apache2/sites-available/default-ssl.conf`:
          AllowEncodedSlashes On
          ProxyRequests Off
          ProxyPreserveHost On
-         <Proxy *>
-             Order deny,allow
-             Allow from all
-         </Proxy>
 
          # These are for Adore-Djatoka, and work fine over http but not over https
 	 # - see https://groups.google.com/forum/?pli=1#!msg/islandora/yWlpQtL8gEU/cxF4ZmvbY8YJ
