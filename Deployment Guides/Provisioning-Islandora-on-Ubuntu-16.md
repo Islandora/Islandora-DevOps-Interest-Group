@@ -683,6 +683,7 @@ sed -i '929iextension=uploadprogress.so' /etc/php/7.1/apache2/php.ini
 
 #sed -i "s|upload_max_filesize = 2M|upload_max_filesize = 2048M|g" /etc/php/7.1/apache2/php.ini
 
+# - NOTE: use of APC is deprecated in favour of Zend Opcache. Don't rely on this configuration.
 echo "apc.shm_size = 64M" >> $APC_CONFIG_FILE
 ```
 
