@@ -732,7 +732,7 @@ Do the following if you want 3 months worth of monthly backups kept.
 
 `sed -i 's|#retain	delta	3|retain	delta	3|' /etc/rsnapshot.conf`
 
-Example `LOCALHOST` backup definition section (in `/etc/rsnapshot.sh`, edit as desired):
+Example `LOCALHOST` backup definition section (in `/etc/rsnapshot.conf`, edit as desired):
 ```
 backup	/home/		localhost/
 backup	/etc/		localhost/
