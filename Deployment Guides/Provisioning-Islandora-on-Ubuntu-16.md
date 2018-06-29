@@ -1252,7 +1252,8 @@ systemctl start cantaloupe.service
 cat > /root/bin/cantaloupe-purge.sh <<END_CLP
 #!/bin/bash
 cd /usr/local/cantaloupe
-sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar cantaloupe-4.0.war
+# - edit this for your enpoint API user and password
+wget -q --server-response --user=MyEndpointApiUsername --password=MyEndpointApiSecret --post-data='{ "verb" : "PurgeCache" }' --header=Content-Type:application/json http://localhost:8182/tasks
 END_CLP
 
 chmod 750 /root/bin/cantaloupe-purge.sh
@@ -1275,6 +1276,13 @@ sed -i "s|temp_pathname =.*$|temp_pathname = /srv/cantaloupe/tmp|" cantaloupe.pr
 sed -i "s|http.host = 0.0.0.0|http.host = 127.0.0.1|" cantaloupe.properties
 
 sed -i "s|FilesystemSource.BasicLookupStrategy.path_prefix = /home/myself/images/|FilesystemSource.BasicLookupStrategy.path_prefix = /tmp/|" cantaloupe.properties
+
+# edit these following two for the username/password you will use - needed because the purge script has to use the API now.
+sed -i "s|endpoint.api.enabled = false|endpoint.api.enabled = true|" cantaloupe.properties
+
+sed -i "s|endpoint.api.username =.*$|endpoint.api.username = yourusername|" cantaloupe.properties
+
+sed -i "s|endpoint.api.secret =.*$|endpoint.api.secret = yourpassword|" cantaloupe.properties
 
 sed -i "s|log.application.level = debug|log.application.level = warn|" cantaloupe.properties
 
