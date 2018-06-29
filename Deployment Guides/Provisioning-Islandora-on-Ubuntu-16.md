@@ -447,13 +447,13 @@ This is optional. Cantaloupe is an alternative large image display processer to 
 ```
 cd /usr/local
 
-wget https://github.com/medusa-project/cantaloupe/releases/download/v3.4.2/Cantaloupe-3.4.2.zip
+wget https://github.com/medusa-project/cantaloupe/releases/download/v4.0/cantaloupe-4.0.zip
 
-unzip Cantaloupe-3.4.2.zip
+unzip cantaloupe-4.0.zip
 
-rm -f Cantaloupe-3.4.2.zip
+rm -f cantaloupe-4.0.zip
 
-ln -s /usr/local/Cantaloupe-3.4.2 /usr/local/cantaloupe
+ln -s /usr/local/cantaloupe-4.0 /usr/local/cantaloupe
 
 mkdir -p /srv/cantaloupe/cache
 
@@ -1206,7 +1206,7 @@ Note: If you install Adore-Djatoka with Blazegraph, you will need to change the 
 
 This is optional. Cantaloupe can be installed under an existing Tomcat or run as a standalone service. The latter is recommended by the Cantaloupe project, though the former is supported. The later makes separability of services easier if necessary. To install under the Fedora Tomcat:
 
-`cp /usr/local/Cantaloupe-3.4.2/Cantaloupe-3.4.2.war $CATALINA_HOME/webapps/cantaloupe.war && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/cantaloupe*`
+`cp /usr/local/cantaloupe-4.0/cantaloupe-4.0.war $CATALINA_HOME/webapps/cantaloupe.war && chown -R tomcat7:tomcat7 $CATALINA_HOME/webapps/cantaloupe*`
 
 And add the following line to `/etc/default/tomcat7`:
 
@@ -1214,7 +1214,7 @@ And add the following line to `/etc/default/tomcat7`:
 
 To install under the Blazegraph Tomcat:
 
-`cp /usr/local/Cantaloupe-3.4.2/Cantaloupe-3.4.2.war /usr/share/tomcat7-blzg/webapps/cantaloupe.war && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/cantaloupe*`
+`cp /usr/local/cantaloupe-4.0/cantaloupe-4.0.war /usr/share/tomcat7-blzg/webapps/cantaloupe.war && chown -R blazegraph:blazegraph /usr/share/tomcat7-blzg/webapps/cantaloupe*`
 
 Also edit `/var/bigdata/.bash_profile` to add the appropriate JAVA_OPTS option.
 
@@ -1224,7 +1224,7 @@ cd ~
 
 useradd -d /srv/cantaloupe/home -s /bin/false cantaloupe
 
-chown -R cantaloupe:cantaloupe /srv/cantaloupe /usr/local/Cantaloupe-3.4.2
+chown -R cantaloupe:cantaloupe /srv/cantaloupe /usr/local/cantaloupe-4.0
 ```
 Set up the `cantaloupe` service:
 ```
@@ -1235,8 +1235,8 @@ Description=Cantaloupe Image Server
 [Service]
 Type=simple
 User=cantaloupe
-ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/Cantaloupe-3.4.2.war
-ExecStop=/usr/bin/killall -9 Cantaloupe-3.4.2.war
+ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/cantaloupe-4.0.war
+ExecStop=/usr/bin/killall -9 cantaloupe-4.0.war
 Restart=on-failure
 
 [Install]
@@ -1252,7 +1252,7 @@ systemctl start cantaloupe.service
 cat > /root/bin/cantaloupe-purge.sh <<END_CLP
 #!/bin/bash
 cd /usr/local/cantaloupe
-sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar Cantaloupe-3.4.1.war
+sudo -u cantaloupe java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Dcantaloupe.cache.purge -jar cantaloupe-4.0.war
 END_CLP
 
 chmod 750 /root/bin/cantaloupe-purge.sh
@@ -1266,13 +1266,15 @@ Regardless of how you install Cantaloupe, do the following configuration:
 ```
 cd /usr/local/cantaloupe
 
-cp cantaloupe.properties.sample cantaloupe.properties
+cp -p cantaloupe.properties.sample cantaloupe.properties
+
+cp -p delegates.rb.sample delegates.rb
 
 sed -i "s|temp_pathname =.*$|temp_pathname = /srv/cantaloupe/tmp|" cantaloupe.properties
 
 sed -i "s|http.host = 0.0.0.0|http.host = 127.0.0.1|" cantaloupe.properties
 
-sed -i "s|FilesystemResolver.BasicLookupStrategy.path_prefix = /home/myself/images/|FilesystemResolver.BasicLookupStrategy.path_prefix = /tmp/|" cantaloupe.properties
+sed -i "s|FilesystemSource.BasicLookupStrategy.path_prefix = /home/myself/images/|FilesystemSource.BasicLookupStrategy.path_prefix = /tmp/|" cantaloupe.properties
 
 sed -i "s|log.application.level = debug|log.application.level = warn|" cantaloupe.properties
 
@@ -1300,24 +1302,22 @@ sed -i "s|log.access.RollingFileAppender.pathname = /path/to/logs/access.log|log
 
 sed -i "s|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /path/to/logs/access-%d{yyyy-MM-dd}.log|log.access.RollingFileAppender.TimeBasedRollingPolicy.filename_pattern = /srv/cantaloupe/log/access-%d{yyyy-MM-dd}.log|" cantaloupe.properties
 
-sed -i "s|processor.jp2 = KakaduProcessor|processor.jp2 = OpenJpegProcessor|" cantaloupe.properties
+sed -i "s|processor.jp2 = KakaduNativeProcessor|processor.jp2 = OpenJpegProcessor|" cantaloupe.properties
 
-sed -i "s|StreamProcessor.retrieval_strategy = StreamStrategy|StreamProcessor.retrieval_strategy = CacheStrategy|" cantaloupe.properties
+sed -i "s|processor.stream_retrieval_strategy = StreamStrategy|processor.stream_retrieval_strategy = CacheStrategy|" cantaloupe.properties
 
-sed -i "s|cache.server.source.enabled = false|cache.server.source.enabled = true|" cantaloupe.properties
+sed -i "s|cache.server.derivative.enabled = false|cache.server.source.enabled = true|" cantaloupe.properties
 
 sed -i "s|cache.server.derivative =*|cache.server.derivative = FilesystemCache|" cantaloupe.properties
 
 sed -i "s|cache.server.worker.enabled = false|cache.server.worker.enabled = true|" cantaloupe.properties
 
-sed -i "s|resolver.static = FilesystemResolver|resolver.static = HttpResolver|" cantaloupe.properties
+sed -i "s|source.static = FilesystemSource|source.static = HttpSource|" cantaloupe.properties
 
-sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = true|" cantaloupe.properties
+sed -i "s|HttpSource.trust_all_certs = false|HttpSource.trust_all_certs = true|" cantaloupe.properties
 
-# - DigiBESS and Islandora Vagrant differ on these
+# - DigiBESS and Islandora Vagrant differ on these (besides the latter not yet being at 4.0...)
 #sed -i "s|endpoint.iiif.content_disposition = none|endpoint.iiif.content_disposition = inline|" cantaloupe.properties
-
-#sed -i "s|processor.limit_to_8_bits = true|processor.limit_to_8_bits = false|" cantaloupe.properties
 
 #sed -i "s|cache.server.derivative.enabled = false|cache.server.derivative.enabled = true|" cantaloupe.properties
 
@@ -1325,13 +1325,13 @@ sed -i "s|HttpResolver.trust_all_certs = false|HttpResolver.trust_all_certs = tr
 
 #sed -i "s|FilesystemCache.pathname = /var/cache/cantaloupe|FilesystemCache.pathname = /srv/cantaloupe/cache|" cantaloupe.properties
 
-#sed -i "s|HttpResolver.lookup_strategy = BasicLookupStrategy|HttpResolver.lookup_startegy = ScriptLookupStrategy|" cantaloupe.properties
+#sed -i "s|HttpSource.lookup_strategy = BasicLookupStrategy|HttpSource.lookup_startegy = ScriptLookupStrategy|" cantaloupe.properties
 
-#sed -i "s|HttpResolver.BasicLookupStrategy.url_prefix = http://localhost/images/|HttpResolver.BasicLookupStrategy.url_prefix =|" cantaloupe.properties
+#sed -i "s|HttpSource.BasicLookupStrategy.url_prefix = http://localhost/images/|HttpSource.BasicLookupStrategy.url_prefix =|" cantaloupe.properties
 
-#sed -i "s|HttpResolver.auth.basic.username =|HttpResolver.auth.basic.username = anonymous|" cantaloupe.properties
+#sed -i "s|HttpSource.BasicLookupStrategy.auth.basic.username =|HttpSource.BasicLookupStrategy.auth.basic.username = anonymous|" cantaloupe.properties
 
-#sed -i "s|HttpResolver.auth.basic.secret =|HttpResolver.auth.basic.secret = anonymous|" cantaloupe.properties
+#sed -i "s|HttpSource.BasicLookupStrategy.auth.basic.secret =|HttpSource.BasicLookupStrategy.auth.basic.secret = anonymous|" cantaloupe.properties
 ```
 
 Islandora Vagrant uses a Cantaloupe provided script, called `delegates-3.4.rb` that permits "obfuscation" of URLs. We leave further configuration of this service as an exercise to the reader. See the DigiBESS site.
