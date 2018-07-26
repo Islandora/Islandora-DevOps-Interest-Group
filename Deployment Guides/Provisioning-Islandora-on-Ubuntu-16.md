@@ -1235,7 +1235,7 @@ Description=Cantaloupe Image Server
 [Service]
 Type=simple
 User=cantaloupe
-ExecStart=/usr/bin/nohup /usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/cantaloupe-4.0.war
+ExecStart=/usr/bin/java -Dcantaloupe.config=/usr/local/cantaloupe/cantaloupe.properties -Xmx256m -jar /usr/local/cantaloupe/cantaloupe-4.0.war
 ExecStop=/usr/bin/killall -9 cantaloupe-4.0.war
 Restart=on-failure
 
