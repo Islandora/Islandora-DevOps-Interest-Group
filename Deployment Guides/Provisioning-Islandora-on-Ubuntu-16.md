@@ -328,7 +328,11 @@ Edit `/etc/tomcat7/tomcat-users.xml`:
 
 #### Blazegraph  <a id="blazegraph"></a>
 
-This step is optional. Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
+This step is optional.
+
+There are two ways to do this: 1) using a second Tomcat, or 2) running Blazegraph "standalone". Choose one or the other.
+
+1) Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
 
 Install and configure a second Tomcat. You should use the latest version of Tomcat 7. See "https://tomcat.apache.org/download-70.cgi" and adjust the URL, etc., below.
 ```
@@ -402,7 +406,28 @@ update-rc.d blazegraph defaults
 
 systemctl start blazegraph
 ```
-Check that Blazegraph is present at port 8081.
+2) Install the Blazegraph Debian Deployer (see https://github.com/blazegraph/database/tree/master/blazegraph-deb):
+```
+cd ~
+
+wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.deb/download -O blazegraph.deb
+
+dpkg --install blazegraph.deb
+
+# This creates user/group 'blzg' and installs the Blazegraph standalone (Jetty) in /usr/share/blazegraph.
+# The configuration is in /etc/blazegraph/ and /etc/default/blazegraph. Change the port specification in
+# the latter to 8081, or change the 'remote-blazegraph.xml' configuration below to '9999', which is otherwise
+# the default.
+
+cd /etc/default/
+
+cp -p blazegraph blazegraph.bak
+
+sed -i "s|JETTY_PORT=\"9999|JETTY_PORT=\"8081|g" blazegraph
+
+systemctl restart blazegraph
+```
+Whichever method of installing Blazegraph you have chosen, check that Blazegraph is present at port 8081.
 
 ```
 systemctl stop blazegraph
