@@ -427,8 +427,14 @@ sed -i "s|JETTY_PORT=\"9999|JETTY_PORT=\"8081|g" blazegraph
 
 systemctl restart blazegraph
 ```
-Whichever method of installing Blazegraph you have chosen, check that Blazegraph is present at port 8081.
+Note: you will likely need to tweak a few things in the configuration provided by the standalone installation, in addition
+to the port specification mentioned above. In particular, you should check the java memory requirements in `/etc/default/blazegraph`.
+The defaults are high, but there is a convenient testing value provided. In addition, you may wish to modify some values in
+`/etc/blazegraph/RWstore.properties`, based on the configuration provided by the `discoverygarden/blazegraph_conf` repository,
+especially if you have a large installation. Also, the default log level in `/etc/blazegraph/log4j.properties` is `WARN`, which
+you may wish to set to `ERROR`.
 
+Whichever method of installing Blazegraph you have chosen, check that Blazegraph is present at port 8081.
 ```
 systemctl stop blazegraph
 ```
