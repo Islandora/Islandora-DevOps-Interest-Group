@@ -332,7 +332,9 @@ This step is optional.
 
 There are two ways to do this: 1) using a second Tomcat, or 2) running Blazegraph "standalone". Choose one or the other.
 
-1) Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
+1. Install using a second Tomcat:
+
+Instructions are mostly a copy of http://dev.digibess.it/doku.php?id=reloaded:be_blazeg, with a few modifications. We have to install under a separate Tomcat from Fedora, as Fedora cannot be running when rebuilding the Resource Index (see https://github.com/discoverygarden/trippi-sail/wiki/Repacing-Mulgara-with-Blazegraph). This also makes migrating this service to a separate machine easier.
 
 Install and configure a second Tomcat. You should use the latest version of Tomcat 7. See "https://tomcat.apache.org/download-70.cgi" and adjust the URL, etc., below.
 ```
@@ -406,7 +408,7 @@ update-rc.d blazegraph defaults
 
 systemctl start blazegraph
 ```
-2) Install the Blazegraph Debian Deployer (see https://github.com/blazegraph/database/tree/master/blazegraph-deb):
+2. Install the Blazegraph Debian Deployer (see https://github.com/blazegraph/database/tree/master/blazegraph-deb):
 ```
 cd ~
 
