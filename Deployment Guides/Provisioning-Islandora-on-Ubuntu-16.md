@@ -408,7 +408,9 @@ update-rc.d blazegraph defaults
 
 systemctl start blazegraph
 ```
-2. Install the Blazegraph Debian Deployer (see https://github.com/blazegraph/database/tree/master/blazegraph-deb):
+2. Install standalone:
+
+We install the Blazegraph Debian Deployer (see https://github.com/blazegraph/database/tree/master/blazegraph-deb).
 ```
 cd ~
 
@@ -436,7 +438,7 @@ The defaults are high, but there is a convenient testing value provided. In addi
 especially if you have a large installation. Also, the default log level in `/etc/blazegraph/log4j.properties` is `WARN`, which
 you may wish to set to `ERROR`.
 
-Whichever method of installing Blazegraph you have chosen, check that Blazegraph is present at port 8081.
+Whichever method of installing Blazegraph you have chosen, check that Blazegraph is present at port 8081, then stop the service.
 ```
 systemctl stop blazegraph
 ```
