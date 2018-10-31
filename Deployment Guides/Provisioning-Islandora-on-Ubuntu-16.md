@@ -33,6 +33,7 @@ This documentation is provided by the Islandora DevOps Interest Group "as is" an
    * [drush](#drush)
 * [Configuration](#configuration)
   * [LibreOffice](#libreoffice)
+  * [ImageMagick](#imagemagick)
   * [Apache and PHP](#apache-php)
   * [Setup MySQL Databases and Server](#setup-mysql)
 * [Install Fedora Commons](#fedora)
@@ -567,6 +568,24 @@ END_T
 ```
 
 You will need to configure Drupal to account for this: set `Temporary directory` in `Configuration => Media => File system` to `/tmp/fedora`.
+
+#### ImageMagick <a id="imagemagick"></a>
+
+Since ImageMagick version 6.9.4-0 or 7.0.1-2, there is a new `policy.xml` configuration file that controls some uses of ImageMagick utilities,
+such as `convert`. This is due to `CVE-2016-3714`. The fix has been back ported to the Ubuntu 16 ImageMagick packages as of Oct 4, 2018. See, e.g.:
+
+https://stackoverflow.com/questions/42928765/convertnot-authorized-aaaa-error-constitute-c-readimage-453
+
+Edit `/etc/ImageMagick-6/policy.xml` (modify `PDF` policy and add `LABEL` policy):
+
+```
+<policymap>
+  [ ... ]
+  <policy domain="coder" rights="read|write" pattern="PDF" />
+  <policy domain="coder" rights="none" pattern="XPS" />
+  <policy domain="coder" rights="read|write" pattern="LABEL" />
+</policymap>
+```
 
 #### Apache and PHP  <a id="apache-php"></a>
 
